@@ -1,0 +1,54 @@
+body {
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    height: 50%;
+    margin: 0;
+}
+
+.container {
+    text-align: center;
+}
+.styled-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.styled-table th, .styled-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.styled-table th {
+    background-color: #f2f2f2;
+}
+
+/* Styling for form actions */
+.action-link, .action-button {
+    text-decoration: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.action-link:hover, .action-button:hover {
+    background-color: #f8f8f8;
+}
+
+.edit-link {
+    color: #4CAF50;
+}
+
+.delete-button {
+    color: #f44336;
+}
+
+/* Additional styling for better spacing */
+.delete-form {
+    display: inline; /* Make the form display inline */
+}
