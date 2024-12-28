@@ -1,64 +1,158 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# MovieWebsite
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based project for managing and displaying movie-related information.
 
-## About Laravel
+## Prerequisites
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Before setting up the project, ensure the following tools are installed on your system:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **PHP** (version 8.1 or higher)
+- **Composer**
+- **Node.js** and **npm**
+- **MySQL** or any supported database
+- **Git**
+- TMDB API token
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Installation
 
-## Learning Laravel
+Follow these steps to set up the project on your local machine:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Step 1: Clone the Repository
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+# Clone the repository
+git clone <repository-url>
 
-## Laravel Sponsors
+# Navigate to the project directory
+cd MovieWebsite
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+---
 
-### Premium Partners
+### Step 2: Install PHP Dependencies
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Ensure Composer is installed, then run:
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+### Step 3: Install JavaScript Dependencies
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Ensure npm (or Yarn) is installed, then run:
 
-## Security Vulnerabilities
+```bash
+npm install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+### Step 4: Configure the `.env` File
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Copy the example environment file:
+  ```bash
+  cp .env.example .env
+  ```
+- Open the `.env` file and update the following settings:
+  - `DB_CONNECTION` (e.g., `mysql`)
+  - `DB_HOST` (e.g., `127.0.0.1` or your database server)
+  - `DB_PORT` (default: `3306`)
+  - `DB_DATABASE` (your database name)
+  - `DB_USERNAME` (your database username)
+  - `DB_PASSWORD` (your database password)
+  - `TMDB_TOKEN` (your-tmdb-token)
+
+---
+
+### Step 5: Generate the Application Key
+
+Run the following command to generate a unique application key:
+
+```bash
+php artisan key:generate
+```
+
+---
+
+### Step 6: Run Database Migrations
+
+Ensure your database is running and properly configured in `.env`, then run:
+
+```bash
+php artisan migrate
+```
+
+---
+
+### Step 7: Build Frontend Assets
+
+If the project uses Laravel Mix or similar tools, compile the assets:
+
+```bash
+# For development mode
+npm run dev
+
+# For production mode
+npm run prod
+```
+
+---
+
+### Step 8: Run the Application
+
+For local development, use the built-in Laravel server:
+
+```bash
+php artisan serve
+```
+
+By default, the application will be available at `http://127.0.0.1:8000`.
+
+---
+
+## Deployment
+
+To deploy the application, ensure the following:
+
+1. Configure a web server (e.g., Apache or Nginx).
+2. Use environment-specific settings in the `.env` file.
+3. Set proper file permissions:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+4. Optimize the application for production:
+   ```bash
+   php artisan optimize
+   ```
+
+---
+
+## Common Issues
+
+### Missing Dependencies
+
+If the `vendor` or `node_modules` folders are missing, ensure you run:
+
+- `composer install` for PHP dependencies.
+- `npm install` for JavaScript dependencies.
+
+### Permissions Issues
+
+Ensure the `storage` and `bootstrap/cache` directories are writable:
+
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+### Database Connection Errors
+
+Double-check the database configuration in your `.env` file and ensure the database service is running.
+
+---
+
+## Contributors
+
+- **Daniel Cahya Kurniawan**
