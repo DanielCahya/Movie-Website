@@ -39,7 +39,6 @@ Route::middleware(['auth'])->group(function(){
   Route::get('/movieshow/{id}',[ShowController::class, 'movieshow']);
   Route::get('/showdetailtv/{id}',[ShowController::class, 'showdetailtv']);
   Route::get('/showanime/{id}',[ShowController::class, 'showanime']);
-  Route::get('/showcari/{id}',[ShowController::class, 'showcari']);
   Route::get('/admin',[LoginController::class,'data'])->middleware('multiAkses:admin,superadmin')->name('admin');
   Route::get('/list',[LoginController::class, 'data']);
   Route::get('/edit/{id}',[LoginController::class,'edit'])->middleware('multiAkses:admin,superadmin')->name('edit');
