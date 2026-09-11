@@ -25,8 +25,8 @@
         <!-- OWL CAROUSEL -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw==" crossorigin="anonymous"></script>
         <!-- APP SCRIPT -->
-        <script type="text/javascript" src="/js/appme.js"></script>
-        <script type="text/javascript" src="/js/index.js"></script>
+        <script type="text/javascript" src="/Js/appme.js"></script>
+        <script type="text/javascript" src="/Js/index.js"></script>
         <div class="nav-wrapper">
             <div class="container">
                 <div class="nav">
