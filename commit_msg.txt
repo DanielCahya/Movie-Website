@@ -1,8 +1,0 @@
-perf: implement TMDB API caching and fix broken endpoints
-
-Changes:
-- Fix malformed TMDB API URLs in ShowController
-- Implement Cache::remember() with file driver for all TMDB API endpoints to reduce external API requests
-- Extract redundant genre fetching logic into private helper methods in AdminController
-- Remove broken/unused /showcari route in web.php
-- Suppress PHP 8.4 deprecation warnings in public/index.php to fix UI rendering

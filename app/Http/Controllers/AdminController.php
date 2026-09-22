@@ -119,11 +119,11 @@ class AdminController extends Controller
 
         $topAn = Cache::remember('tmdb:tv_top_anime', now()->addHours(4), function () use ($genreId) {
             return Http::withToken(config('services.tmdb.token'))
-                ->get('https://api.themoviedb.org/3/discover/tv/', [
+                ->get('https://api.themoviedb.org/3/discover/tv', [
                     'sort_by' => 'vote_count.desc', // Sort by top-rated
                     'with_genres' => $genreId,
                 ])
-                ->json('results');
+                ->json('results') ?? [];
         });
         
         

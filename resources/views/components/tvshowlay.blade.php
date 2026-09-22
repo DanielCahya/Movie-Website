@@ -41,7 +41,7 @@
                         <li><a href="{{url('animation')}}">Anime</a></li>
                         <li><a href="{{ url('admin') }}">Admin</a></li>
                         <li></li>
-                        <livewire:search1>
+                        <livewire:search />
                         <li>
                             <a href="logout" class="btn btn-hover">
                                 <span>logout</span>
