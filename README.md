@@ -1,12 +1,28 @@
-# MovieWebsite
+# Galiwe 🎬
 
-A Laravel-based project for managing and displaying movie-related information.
+A modern, responsive Laravel-based web application for discovering movies, TV shows, and anime. Powered by the TMDB API and optimized with Redis caching.
+
+## Features
+
+- **TMDB API Integration**: Real-time data for popular, top-rated, and currently airing movies and TV shows.
+- **Dedicated Anime Section**: Specialized filtering for animated content.
+- **Fast Caching**: Utilizes Redis for high-performance API response caching.
+- **Dynamic Search**: Real-time search powered by Laravel Livewire.
+- **Admin Dashboard**: Manage users and application settings.
+
+## Tech Stack
+
+- **Backend**: Laravel, PHP 8.1+
+- **Frontend**: Tailwind CSS, Laravel Livewire
+- **Database**: MySQL
+- **Caching**: Redis
+- **APIs**: The Movie Database (TMDB) API
 
 ## Prerequisites
 
 Before setting up the project, ensure the following tools are installed on your system:
 
-- **PHP** (version 8.1 or higher)
+- **PHP** (version 8.1 or higher) with `fileinfo` and `curl` extensions enabled
 - **Composer**
 - **Node.js** and **npm**
 - **MySQL** or any supported database
@@ -64,6 +80,8 @@ npm install
   - `DB_USERNAME` (your database username)
   - `DB_PASSWORD` (your database password)
   - `TMDB_TOKEN` (your-tmdb-token)
+  - `CACHE_DRIVER=redis`
+  - `REDIS_CLIENT=predis`
 
 ---
 
@@ -77,19 +95,21 @@ php artisan key:generate
 
 ---
 
-### Step 6: Run Database Migrations
+### Step 6: Set up Database
 
-Ensure your database is running and properly configured in `.env`, then run:
+Ensure your database is running and properly configured in `.env`. You can either run the migrations:
 
 ```bash
 php artisan migrate
 ```
 
+Alternatively, you can import the provided `galiwe.sql` dump file directly into your database using your preferred database manager (e.g. phpMyAdmin, Laragon) if you want the sample users and data pre-populated.
+
 ---
 
 ### Step 7: Build Frontend Assets
 
-If the project uses Laravel Mix or similar tools, compile the assets:
+This project uses Laravel Mix to compile Tailwind CSS and Javascript assets. You must compile the assets to generate the final CSS:
 
 ```bash
 # For development mode
@@ -151,7 +171,28 @@ chmod -R 775 storage bootstrap/cache
 
 Double-check the database configuration in your `.env` file and ensure the database service is running.
 
+### cURL error 60: SSL certificate problem
+
+If you are developing on Windows and see an SSL certificate error when the app tries to connect to the TMDB API:
+1. Download `cacert.pem` from [curl.se](https://curl.se/ca/cacert.pem).
+2. Save it to your PHP installation directory (e.g., `C:\php\cacert.pem`).
+3. Open your `php.ini` file, find `;curl.cainfo =` and change it to `curl.cainfo = "C:\php\cacert.pem"`.
+4. Restart your web server (Laragon/XAMPP).
+
+### Redis class not found
+
+If you see a "Class 'Redis' not found" error, make sure your `.env` is configured to use the `predis` client (since native PHP Redis extensions can be difficult to install on Windows):
+```env
+CACHE_DRIVER=redis
+REDIS_CLIENT=predis
+```
+And ensure you have run `composer install` to download the `predis/predis` package.
+
 ---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Contributors
 

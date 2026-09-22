@@ -3,38 +3,38 @@
     <div class="hero-section">
         <!-- HERO SLIDE -->
         <div class="hero-slide">
-            @foreach ($topRated as $topRated)
+            @foreach ($topRated as $movie)
             @if ($loop->index < 1)
             <div class="owl-carousel carousel-nav-center" id="hero-carousel">
                 <!-- SLIDE ITEM -->
 
                 <div class="hero-slide-item">
-                    <img src="{{'https://image.tmdb.org/t/p/original/'.$topRated['backdrop_path']}}">
+                    <img src="{{'https://image.tmdb.org/t/p/original/'.$movie['backdrop_path']}}">
                     <div class="overlay"></div>
                     <div class="hero-slide-item-content">
                         <div class="item-content-wraper">
                             <div class="item-content-title top-down">
-                                {{$topRated['title']}}
+                                {{$movie['title']}}
                             </div>
                             <div class="movie-infos top-down delay-2">
                                 <div class="movie-info">
                                     <i class="bx bxs-star"></i>
-                                    <span>{{$topRated['vote_average']}}</span>
+                                    <span>{{$movie['vote_average']}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    <span>{{\Carbon\Carbon::parse($topRated['release_date'])->format('M d, Y')}}</span>
+                                    <span>{{\Carbon\Carbon::parse($movie['release_date'])->format('M d, Y')}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    @foreach ($topRated['genre_ids'] as $genre)
+                                    @foreach ($movie['genre_ids'] as $genre)
                                         <span>{{$genres->get($genre)}}@if (!$loop->last),@endif </span>
                                     @endforeach
                                 </div>
                             </div>
                             <div class="item-content-description top-down delay-4">
-                                {{ $topRated['overview'] }}
+                                {{ $movie['overview'] }}
                             </div>
                             <div class="item-action top-down delay-6">
-                                <a href="{{url('show', $topRated['id'])}}" class="btn btn-hover">
+                                <a href="{{url('show', $movie['id'])}}" class="btn btn-hover">
                                     <i class="bx bxs-right-arrow"></i>
                                     <span>Watch now</span>
                                 </a>
@@ -53,23 +53,23 @@
         <div class="top-movies-slide">
             <div class="owl-carousel" id="top-movies-slide">
                 <!-- MOVIE ITEM -->
-                @foreach ($nowPlaying as $nowPlaying)
-                <a href="{{url('show', $nowPlaying['id'])}}" class="movie-item">
-                    <img src="{{'https://image.tmdb.org/t/p/w500/'.$nowPlaying['poster_path']}}" alt="">
+                @foreach ($nowPlaying as $movie)
+                <a href="{{url('show', $movie['id'])}}" class="movie-item">
+                    <img src="{{'https://image.tmdb.org/t/p/w500/'.$movie['poster_path']}}" alt="">
                     <div class="movie-item-content">
                         <div class="movie-item-title">
-                            {{$nowPlaying['title']}}
+                            {{$movie['title']}}
                         </div>
                         <div class="movie-infos">
                             <div class="movie-info">
                                 <i class="bx bxs-star"></i>
-                                <span>{{$nowPlaying['vote_average']}}</span>
+                                <span>{{$movie['vote_average']}}</span>
                             </div>
                             <div class="movie-info">
-                                <span>{{\Carbon\Carbon::parse($nowPlaying['release_date'])->format('M d, Y')}}</span>
+                                <span>{{\Carbon\Carbon::parse($movie['release_date'])->format('M d, Y')}}</span>
                             </div>
                             <div class="movie-info">
-                                @foreach ($nowPlaying['genre_ids'] as $genre)
+                                @foreach ($movie['genre_ids'] as $genre)
                                     <span>{{$genres->get($genre)}}@if (!$loop->last),@endif </span>
                                 @endforeach
                             </div>
@@ -90,24 +90,24 @@
                 Trending
             </div>
             <div class="movies-slide carousel-nav-center owl-carousel">
-                @foreach ($popularMovies as $popularMovies)
+                @foreach ($popularMovies as $movie)
                         <!-- MOVIE ITEM -->
-                    <a href="{{url('show', $popularMovies['id'])}}" class="movie-item">
-                        <img src="{{'https://image.tmdb.org/t/p/w500/'.$popularMovies['poster_path']}}" alt="{{$popularMovies['title']}}">
+                    <a href="{{url('show', $movie['id'])}}" class="movie-item">
+                        <img src="{{'https://image.tmdb.org/t/p/w500/'.$movie['poster_path']}}" alt="{{$movie['title']}}">
                         <div class="movie-item-content">
                             <div class="movie-item-title">
-                                {{$popularMovies['title']}}
+                                {{$movie['title']}}
                             </div>
                             <div class="movie-infos">
                                 <div class="movie-info">
                                     <i class="bx bxs-star"></i>
-                                    <span>{{$popularMovies['vote_average']}}</span>
+                                    <span>{{$movie['vote_average']}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    <span>{{\Carbon\Carbon::parse($popularMovies['release_date'])->format('M d, Y')}}</span>
+                                    <span>{{\Carbon\Carbon::parse($movie['release_date'])->format('M d, Y')}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    @foreach ($popularMovies['genre_ids'] as $genre)
+                                    @foreach ($movie['genre_ids'] as $genre)
                                         <span>{{$genres->get($genre)}}@if (!$loop->last),@endif </span>
                                     @endforeach
                                 </div>
@@ -128,24 +128,24 @@
                 New Tv Show
             </div>
             <div class="movies-slide carousel-nav-center owl-carousel">
-                @foreach ($newtv as $newtv)
+                @foreach ($newtv as $tv)
                 <!-- MOVIE ITEM -->
-                    <a href="{{url('showv', $newtv['id'])}}" class="movie-item">
-                        <img src="{{'https://image.tmdb.org/t/p/w500/'.$newtv['poster_path']}}" alt="{{$newtv['name']}}">
+                    <a href="{{url('showv', $tv['id'])}}" class="movie-item">
+                        <img src="{{'https://image.tmdb.org/t/p/w500/'.$tv['poster_path']}}" alt="{{$tv['name']}}">
                         <div class="movie-item-content">
                             <div class="movie-item-name">
-                                {{$newtv['name']}}
+                                {{$tv['name']}}
                             </div>
                             <div class="movie-infos">
                                 <div class="movie-info">
                                     <i class="bx bxs-star"></i>
-                                    <span>{{$newtv['vote_average']}}</span>
+                                    <span>{{$tv['vote_average']}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    <span>{{\Carbon\Carbon::parse($newtv['first_air_date'])->format('M d, Y')}}</span>
+                                    <span>{{\Carbon\Carbon::parse($tv['first_air_date'])->format('M d, Y')}}</span>
                                 </div>
                                 <div class="movie-info">
-                                    @foreach ($newtv['genre_ids'] as $genre)
+                                    @foreach ($tv['genre_ids'] as $genre)
                                         <span>{{$genresTv->get($genre)}}@if (!$loop->last),@endif </span>
                                     @endforeach
                                 </div>
@@ -166,24 +166,24 @@
                 New Animasi
             </div>
             <div class="movies-slide carousel-nav-center owl-carousel">
-                @foreach ($anime as $anime)
+                @foreach ($anime as $ani)
                         <!-- MOVIE ITEM -->
-                        <a href="{{url('show', $anime['id'])}}" class="movie-item">
-                            <img src="{{'https://image.tmdb.org/t/p/w500/'.$anime['poster_path']}}" alt="{{$anime['title']}}">
+                        <a href="{{url('show', $ani['id'])}}" class="movie-item">
+                            <img src="{{'https://image.tmdb.org/t/p/w500/'.$ani['poster_path']}}" alt="{{$ani['title']}}">
                             <div class="movie-item-content">
                                 <div class="movie-item-title">
-                                    {{$anime['title']}}
+                                    {{$ani['title']}}
                                 </div>
                                 <div class="movie-infos">
                                     <div class="movie-info">
                                         <i class="bx bxs-star"></i>
-                                        <span>{{$anime['vote_average']}}</span>
+                                        <span>{{$ani['vote_average']}}</span>
                                     </div>
                                     <div class="movie-info">
-                                        <span>{{\Carbon\Carbon::parse($anime['release_date'])->format('M d, Y')}}</span>
+                                        <span>{{\Carbon\Carbon::parse($ani['release_date'])->format('M d, Y')}}</span>
                                     </div>
                                     <div class="movie-info">
-                                        @foreach ($anime['genre_ids'] as $genre)
+                                        @foreach ($ani['genre_ids'] as $genre)
                                             <span>{{$genres->get($genre)}}@if (!$loop->last),@endif </span>
                                         @endforeach
                                     </div>

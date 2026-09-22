@@ -15,15 +15,9 @@ class ShowController extends Controller
             ->json();
         });
 
-        $random = Cache::remember('tmdb:movie:'.$id, now()->addHours(12), function () use ($id) {
-            return Http::withToken(config('services.tmdb.token'))
-            ->get('https://api.themoviedb.org/3/movie/'.$id.'?append_to_response=credits,videos,images')
-            ->json();
-        });
-
         return view('movies.show',[
             'popularMovies' => $popularMovies,
-            'random'=> $random,
+            'random'=> $popularMovies,
         ]);
     }
 
@@ -64,28 +58,10 @@ class ShowController extends Controller
     }
 
     function showani($id){
-        $genreId = 16;
-        $anime = Cache::remember('tmdb:anime:'.$id, now()->addHours(12), function () use ($id, $genreId) {
+        $anime = Cache::remember('tmdb:anime:'.$id, now()->addHours(12), function () use ($id) {
             return Http::withToken(config('services.tmdb.token'))
-            ->get('https://api.themoviedb.org/3/discover/movie/'.$id.'?append_to_response=credits,videos,images', [
-                'with_genres' => $genreId,
-            ])
-            ->json('results');
-        });
-
-        return view('Animation.showAni',[
-            'anime' => $anime,
-        ]);
-    }
-
-    function showanime($id){
-        $genreId = 16;
-        $anime = Cache::remember('tmdb:anime:'.$id, now()->addHours(12), function () use ($id, $genreId) {
-            return Http::withToken(config('services.tmdb.token'))
-            ->get('https://api.themoviedb.org/3/discover/movie/'.$id.'?append_to_response=credits,videos,images', [
-                'with_genres' => $genreId,
-            ])
-            ->json('results');
+            ->get('https://api.themoviedb.org/3/movie/'.$id.'?append_to_response=credits,videos,images')
+            ->json();
         });
 
         return view('Animation.showAni',[

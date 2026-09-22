@@ -3,7 +3,7 @@
     <div class="movie-info border-b border-gray-800">
         <div class="container mx-auto px-4 py-16 flex flex-col md:flex-row">
             <div class="flex-none">
-                <img src="{{'https://image.tmdb.org/t/p/w500/'.$popularMovies['poster_path']}}" alt="Movie Poster">
+                <img src="{{ $popularMovies['poster_path'] ? 'https://image.tmdb.org/t/p/w500/'.$popularMovies['poster_path'] : 'https://via.placeholder.com/500x750' }}" alt="Movie Poster">
             </div>
             <div class="md:ml-24">
                 <h2 class="text-4xl mt-4 md:mt-0 font-semibold">{{$popularMovies['title']}}</h2>
@@ -84,7 +84,7 @@
                 @if ($loop->index<10)
                     <div class="mt-8">
                         <a href="#">
-                            <img src="{{'https://image.tmdb.org/t/p/w500/'.$cast['profile_path'] }}" alt="actor1" class="hover:opacity-75 transition ease-in-out duration-150">
+                            <img src="{{ $cast['profile_path'] ? 'https://image.tmdb.org/t/p/w500/'.$cast['profile_path'] : 'https://via.placeholder.com/300x450' }}" alt="actor1" class="hover:opacity-75 transition ease-in-out duration-150">
                         </a>
                         <div class="mt-2">
                             <a href="#"class="text-lg mt-2 hover:text-gray:300">{{ $cast['name'] }}</a>
