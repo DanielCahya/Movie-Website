@@ -29,13 +29,19 @@ jobs:
     - name: Generate key
       run: php artisan key:generate
 
-    - name: Create Database
+    - name: Create SQLite database
       run: |
         mkdir -p database
         touch database/database.sqlite
 
+    - name: Run database migrations
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+      run: php artisan migrate:fresh --force
+
     - name: Execute tests via PHPUnit
       env:
         DB_CONNECTION: sqlite
-        DB_DATABASE: database/database.sqlite
+        DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
       run: php artisan test
