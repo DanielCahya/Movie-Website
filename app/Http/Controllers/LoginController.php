@@ -32,10 +32,10 @@ class LoginController extends Controller
             }elseif (Auth::user()->role == 'superadmin') {
                 return redirect('/admin');
             }else {
-                return redirect('/user');
+                return redirect('/home');
             }
         }else{
-            return redirect('')->withErrors('Username atau password tidak sesuai')->withInput();
+            return redirect('/login')->withErrors('Username atau password tidak sesuai')->withInput();
         }
     }
 
@@ -44,9 +44,7 @@ class LoginController extends Controller
         return redirect('/');
     }
 
-    function register(){
-        return view('register');
-    }
+
 
     function data(){
         $userRole = Auth::user()->role;
@@ -123,6 +121,6 @@ class LoginController extends Controller
             'username' => request('username'),
             'password' => Hash::make(request('password'))
         ]);
-        return redirect('/');
+        return redirect('/login')->with('success', 'Registration successful! Please login.');
     }
 }
