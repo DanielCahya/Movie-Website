@@ -1,117 +1,127 @@
-<x-showlay>
-    @section('content')
-    <div class="movie-info border-b border-gray-800">
-        <div class="container mx-auto px-4 py-16 flex flex-col md:flex-row">
-            <div class="flex-none">
-                <img src="{{'https://image.tmdb.org/t/p/w500/'.$topRated['poster_path']}}" alt="Movie Poster">
-            </div>
-            <div class="md:ml-24">
-                <h2 class="text-4xl mt-4 md:mt-0 font-semibold">{{$topRated['title']}}</h2>
-                <div class="flex flex-wrap items-center text-gray-400 text-sm">
-                    <svg class="fill-current text-orange-500 w-4" viewBox="0 0 24 24"><g data-name="Layer 2"><path d="M17.56 21a1 1 0 01-.46-.11L12 18.22l-5.1 2.67a1 1 0 01-1.45-1.06l1-5.63-4.12-4a1 1 0 01-.25-1 1 1 0 01.81-.68l5.7-.83 2.51-5.13a1 1 0 011.8 0l2.54 5.12 5.7.83a1 1 0 01.81.68 1 1 0 01-.25 1l-4.12 4 1 5.63a1 1 0 01-.4 1 1 1 0 01-.62.18z" data-name="star"/></g></svg>
-                    <span class="ml-1">{{$topRated['vote_average']}}</span>
-                    <span class="mx-2">|</span>
-                    <span>{{ $topRated['release_date'] }}</span>
-                    <span class="mx-2">|</span>
-                    @foreach ($topRated['genres'] as $genre)
-                        <span>{{$genre['name']}}@if (!$loop->last),@endif </span>
-                    @endforeach
+<x-indexLay>
+    <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-12 relative z-20">
+        
+        <!-- MAIN MOVIE DETAIL SECTION -->
+        <div class="flex flex-col md:flex-row gap-8 lg:gap-16">
+            
+            <!-- Left: Poster -->
+            <div class="flex-none w-full md:w-1/3 lg:w-[400px]">
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl shadow-brand-bg/50">
+                    <img src="{{ isset($topRated['poster_path']) && $topRated['poster_path'] ? 'https://image.tmdb.org/t/p/original/'.$topRated['poster_path'] : 'https://via.placeholder.com/500x750' }}" alt="Movie Poster" class="w-full h-auto object-cover">
                 </div>
-                <p class="text-gray-300 mt-8">
-                    {{ $topRated['overview'] }}
-                </p>
-                <div class="mt-12">
-                    <h4 class="text-white font-semibold">Featured Crew</h4>
-                    <div class="flex mt-4">
-                        @foreach ($topRated['credits']['crew'] as $crew)
-                            @if ($loop->index < 4)
-                            <div class="mr-8">
-                                <div>{{ $crew['name'] }}</div>
-                                <div class="text-sm text-gray-400">{{ $crew['job'] }}</div>
-                            </div>
-                            @endif
+            </div>
+
+            <!-- Right: Movie Details -->
+            <div class="flex-grow flex flex-col justify-center">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+                    {{$topRated['title'] ?? $topRated['name'] ?? ''}}
+                </h1>
+
+                <!-- Badges & Tags -->
+                <div class="flex flex-wrap items-center gap-3 mb-8">
+                    <!-- Genres -->
+                    <div class="flex flex-wrap gap-2 mr-4">
+                        @foreach ($topRated['genres'] ?? [] as $genre)
+                            <span class="px-4 py-1.5 bg-brand-card/80 border border-gray-600/50 rounded-full text-sm text-gray-300 font-medium hover:border-brand transition-colors cursor-default">
+                                {{$genre['name']}}
+                            </span>
                         @endforeach
                     </div>
-                </div>
 
-                <div x-data="{ isOpen: false }">
-                    @if (count($topRated['videos']['results']) > 0)
-                        <div class="mt-12">
-                            <button
-                                @click="isOpen = true"
-                                class="flex inline-flex items-center bg-orange-500 text-gray-900 rounded font-semibold px-5 py-4 hover:bg-orange-600 transition ease-in-out duration-150"
-                            >
-                                <svg class="w-6 fill-current" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-                                <span class="ml-2">Play Trailer</span>
-                            </button>
-                        </div>
+                    <!-- TMDb Rating Badge -->
+                    <div class="flex items-center space-x-1.5 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg text-yellow-500 font-bold text-sm">
+                        <i class='bx bxs-star'></i>
+                        <span>{{$topRated['vote_average'] ?? 'N/A'}}/10</span>
+                    </div>
 
-                        <template x-if="isOpen">
-                            <div
-                                style="background-color: rgba(0, 0, 0, .5);"
-                                class="fixed top-0 left-0 w-full h-full flex items-center shadow-lg overflow-y-auto"
-                            >
-                                <div class="container mx-auto lg:px-32 rounded-lg overflow-y-auto">
-                                    <div class="bg-gray-900 rounded">
-                                        <div class="flex justify-end pr-4 pt-2">
-                                            <button
-                                                @click="isOpen = false"
-                                                @keydown.escape.window="isOpen = false"
-                                                class="text-3xl leading-none hover:text-gray-300">&times;
-                                            </button>
-                                        </div>
-                                        <div class="modal-body px-8 py-8">
-                                            <div class="responsive-container overflow-hidden relative" style="padding-top: 50%">
-                                                <iframe class="responsive-iframe absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/{{ $topRated['videos']['results'][0]['key'] }}" style="border:0;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
+                    <!-- Release / Status Badge -->
+                    @if(isset($topRated['release_date']) || isset($topRated['first_air_date']))
+                    <div class="bg-gray-800 border border-gray-600 px-3 py-1.5 rounded-lg text-gray-300 font-bold text-sm">
+                        {{ \Carbon\Carbon::parse($topRated['release_date'] ?? $topRated['first_air_date'])->format('M d, Y') }}
+                    </div>
                     @endif
-
-
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="movie-cast border-b border-gray-800">
-        <div class="container mx-auto px-4 py-16">
-            <h2 class="text-4xl font-semibold">Cast</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-                @foreach ($topRated['credits']['cast'] as $cast)
-                @if ($loop->index<10)
-                    <div class="mt-8">
-                        <a href="#">
-                            <img src="{{'https://image.tmdb.org/t/p/w500/'.$cast['profile_path'] }}" alt="actor1" class="hover:opacity-75 transition ease-in-out duration-150">
-                        </a>
-                        <div class="mt-2">
-                            <a href="#"class="text-lg mt-2 hover:text-gray:300">{{ $cast['name'] }}</a>
-                            <div class="text-sm text-gray-400">
-                                {{ $cast['character'] }}
+
+                <!-- Overview -->
+                <div class="text-gray-300 text-lg leading-relaxed mb-8 max-w-3xl">
+                    {{ $topRated['overview'] ?? '' }}
+                </div>
+
+                <!-- Action Buttons & Trailer Alpine Component -->
+                <div x-data="{ isOpen: false }">
+                    <div class="flex flex-wrap gap-4 mb-12">
+                        @if (isset($topRated['videos']['results']) && count($topRated['videos']['results']) > 0)
+                        <button type="button" @click.prevent="isOpen = true" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded-full transition-colors shadow-lg shadow-brand-dark/30">
+                            Watch Trailer <i class='bx bx-play-circle text-2xl ml-2'></i>
+                        </button>
+                        @endif
+                        
+                        <button class="flex items-center justify-center bg-transparent hover:bg-white/5 border border-gray-500 text-white font-semibold py-3 px-8 rounded-full transition-colors">
+                            To Watchlist <i class='bx bx-plus text-xl ml-2'></i>
+                        </button>
+                    </div>
+
+                    <!-- Trailer Modal (Alpine.js) -->
+                    <div x-show="isOpen" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div class="w-full max-w-5xl bg-brand-bg rounded-2xl overflow-hidden shadow-2xl relative" @click.away="isOpen = false">
+                            <button @click="isOpen = false" class="absolute -top-12 right-0 text-white hover:text-brand transition-colors text-4xl">
+                                &times;
+                            </button>
+                            <div class="relative pt-[56.25%] w-full">
+                                <template x-if="isOpen">
+                                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/{{ $topRated['videos']['results'][0]['key'] ?? '' }}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                                </template>
                             </div>
                         </div>
                     </div>
-                @endif
-                @endforeach
-            </div>
-        </div>
-    </div>
-    <div class="movie-images">
-        <div class="container mx-auto px-4 py-16">
-            <h2 class="text-4xl font-semibold">Movie Picture</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                @foreach ($topRated['images']['backdrops'] as $image)
-                    @if ($loop->index < 12)
-                        <div class="mt-8">
-                            <img src="{{ 'https://image.tmdb.org/t/p/w500/'.$image['file_path'] }}" alt="gambar Movie" class="hover:opacity-75 transition ease-in-out duration-100">
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endsection
+                </div>
 
-</x-showlay>
+                <!-- Featured Crew (Director, Writer, etc) -->
+                @if(isset($topRated['credits']['crew']))
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 pt-8 border-t border-gray-800">
+                    @foreach (array_slice($topRated['credits']['crew'], 0, 3) as $crew)
+                    <div>
+                        <p class="text-white font-semibold">{{ $crew['name'] }}</p>
+                        <p class="text-gray-400 text-sm">{{ $crew['job'] }}</p>
+                    </div>
+                    @endforeach
+                </div>
+                @endif
+                
+            </div>
+        </div>
+
+        <!-- CAST SECTION -->
+        @if(isset($topRated['credits']['cast']) && count($topRated['credits']['cast']) > 0)
+        <div class="mt-24 pt-12 border-t border-gray-800">
+            <h2 class="text-3xl font-bold text-white mb-8 border-l-4 border-brand pl-4">Top Cast</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                @foreach (array_slice($topRated['credits']['cast'], 0, 10) as $cast)
+                    <div class="group">
+                        <div class="relative rounded-xl overflow-hidden aspect-[2/3] bg-brand-card shadow-lg mb-3">
+                            <img src="{{ isset($cast['profile_path']) && $cast['profile_path'] ? 'https://image.tmdb.org/t/p/w500/'.$cast['profile_path'] : 'https://ui-avatars.com/api/?name='.urlencode($cast['name']).'&background=0D8ABC&color=fff&size=500' }}" alt="{{ $cast['name'] }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        </div>
+                        <h3 class="text-white font-semibold text-sm truncate" title="{{ $cast['name'] }}">{{ $cast['name'] }}</h3>
+                        <p class="text-brand text-xs truncate" title="{{ $cast['character'] }}">{{ $cast['character'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+        
+        <!-- MOVIE PICTURES / BACKDROPS -->
+        @if(isset($topRated['images']['backdrops']) && count($topRated['images']['backdrops']) > 0)
+        <div class="mt-24 pt-12 border-t border-gray-800">
+            <h2 class="text-3xl font-bold text-white mb-8 border-l-4 border-brand pl-4">Gallery</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (array_slice($topRated['images']['backdrops'], 0, 6) as $image)
+                    <div class="rounded-xl overflow-hidden aspect-video bg-brand-card shadow-lg cursor-pointer hover:ring-2 hover:ring-brand transition-all">
+                        <img src="{{ 'https://image.tmdb.org/t/p/w500/'.$image['file_path'] }}" alt="Backdrop" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+    </div>
+</x-indexLay>

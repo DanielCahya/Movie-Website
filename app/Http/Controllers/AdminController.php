@@ -13,7 +13,7 @@ class AdminController extends Controller
         return Cache::remember('tmdb:genres:movie', now()->addHours(24), function () {
             $genresArray = Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/genre/movie/list')
-                ->json('genres');
+                ->json('genres') ?? [];
             
             return collect($genresArray)->mapWithKeys(function($genre) {
                 return [$genre['id'] => $genre['name']];
@@ -26,7 +26,7 @@ class AdminController extends Controller
         return Cache::remember('tmdb:genres:tv', now()->addHours(24), function () {
             $genresTvShow = Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/genre/tv/list')
-                ->json('genres');
+                ->json('genres') ?? [];
             
             return collect($genresTvShow)->mapWithKeys(function($genre) {
                 return [$genre['id'] => $genre['name']];
@@ -40,25 +40,25 @@ class AdminController extends Controller
         $popularMovies = Cache::remember('tmdb:popular_movies', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie/popular')
-                ->json('results');
+                ->json('results') ?? [];
         });
         
         $nowPlaying = Cache::remember('tmdb:now_playing', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie/now_playing')
-                ->json('results');
+                ->json('results') ?? [];
         });
         
         $topRated = Cache::remember('tmdb:top_rated', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie/top_rated')
-                ->json('results');
+                ->json('results') ?? [];
         });
             
         $newtv = Cache::remember('tmdb:new_tv', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/tv/popular')
-                ->json('results');
+                ->json('results') ?? [];
         });
         
         $anime = Cache::remember('tmdb:anime', now()->addHours(4), function () use ($genreId) {
@@ -66,13 +66,13 @@ class AdminController extends Controller
                 ->get('https://api.themoviedb.org/3/discover/movie', [
                     'with_genres' => $genreId,
                 ])
-                ->json('results');
+                ->json('results') ?? [];
         });
 
         $random = Cache::remember('tmdb:random', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie')
-                ->json('results');
+                ->json('results') ?? [];
         });
 
         $genres = $this->getMovieGenres();
@@ -95,7 +95,7 @@ class AdminController extends Controller
         $top = Cache::remember('tmdb:tv_top_rated', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/tv/top_rated')
-                ->json('results');
+                ->json('results') ?? [];
         });
     
         $genres = $this->getMovieGenres();
@@ -114,7 +114,7 @@ class AdminController extends Controller
         $popularMovies = Cache::remember('tmdb:popular_movies', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie/popular')
-                ->json('results');
+                ->json('results') ?? [];
         });
 
         $topAn = Cache::remember('tmdb:tv_top_anime', now()->addHours(4), function () use ($genreId) {
@@ -130,7 +130,7 @@ class AdminController extends Controller
         $newtv = Cache::remember('tmdb:tv_airing_today', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/tv/airing_today')
-                ->json('results');
+                ->json('results') ?? [];
         });
         
         $anime = Cache::remember('tmdb:anime', now()->addHours(4), function () use ($genreId) {
@@ -138,7 +138,7 @@ class AdminController extends Controller
                 ->get('https://api.themoviedb.org/3/discover/movie', [
                     'with_genres' => $genreId,
                 ])
-                ->json('results');
+                ->json('results') ?? [];
         });
     
         $genres = $this->getMovieGenres();
@@ -160,7 +160,7 @@ class AdminController extends Controller
         $topRated = Cache::remember('tmdb:top_rated', now()->addHours(4), function () {
             return Http::withToken(config('services.tmdb.token'))
                 ->get('https://api.themoviedb.org/3/movie/top_rated')
-                ->json('results');
+                ->json('results') ?? [];
         });
     
         $genres = $this->getMovieGenres();
