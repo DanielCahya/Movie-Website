@@ -74,10 +74,40 @@
                     </div>
                     
                     @auth
-                    <!-- Logout -->
-                    <a href="{{ url('logout') }}" title="Logout" class="bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors flex items-center justify-center">
-                        <i class='bx bx-log-out text-xl'></i>
-                    </a>
+                    <!-- User Dropdown Menu -->
+                    <div class="relative ml-4 pl-4 border-l border-white/10" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 text-white hover:text-brand transition-colors group focus:outline-none">
+                            @if(Auth::user()->avatar)
+                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-9 h-9 rounded-full border border-white/20 group-hover:border-brand transition-colors object-cover shadow-sm">
+                            @else
+                                <div class="w-9 h-9 rounded-full bg-brand-card border border-white/20 group-hover:border-brand flex items-center justify-center text-sm font-bold text-brand transition-colors uppercase shadow-sm">
+                                    {{ substr(Auth::user()->username, 0, 1) }}
+                                </div>
+                            @endif
+                            <span class="font-medium hidden md:block">{{ Auth::user()->username }}</span>
+                            <i class='bx bx-chevron-down text-xl text-gray-400 group-hover:text-brand transition-colors' :class="{'rotate-180': open}"></i>
+                        </button>
+
+                        <!-- Dropdown Content -->
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-3 w-52 bg-brand-card border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
+                             style="display: none;">
+                            
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
+                                <i class='bx bx-user text-lg text-brand'></i> Profile
+                            </a>
+                            
+                            <a href="{{ url('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                                <i class='bx bx-log-out text-lg'></i> Sign Out
+                            </a>
+                        </div>
+                    </div>
                     @else
                     <!-- Login / Register -->
                     <div class="flex items-center space-x-4 ml-2">

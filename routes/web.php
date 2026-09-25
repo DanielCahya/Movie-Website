@@ -26,6 +26,13 @@ Route::middleware(['guest'])->group(function(){
   Route::post('/registerproses',[LoginController::class, 'create']);
 });
 
+Route::middleware(['auth'])->group(function(){
+    // Profile Routes
+    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/{username}', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+});
+
 // Publicly accessible pages
 Route::get('/',[AdminController::class, 'index']);
 Route::get('/home',[AdminController::class, 'index']);
