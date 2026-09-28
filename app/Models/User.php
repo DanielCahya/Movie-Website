@@ -21,6 +21,8 @@ class User extends Authenticatable
         'email',
         'username',
         'password',
+        'avatar',
+        'bio',
     ];
 
     /**
@@ -41,4 +43,28 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Users that this user follows.
+     */
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'followed_id')->withTimestamps();
+    }
+
+    /**
+     * Users that follow this user.
+     */
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'followed_id', 'follower_id')->withTimestamps();
+    }
+
+    /**
+     * Check if this user is following another user.
+     */
+    public function isFollowing($userId)
+    {
+        return $this->following()->where('followed_id', $userId)->exists();
+    }
 }
