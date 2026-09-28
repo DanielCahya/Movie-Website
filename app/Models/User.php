@@ -67,4 +67,20 @@ class User extends Authenticatable
     {
         return $this->following()->where('followed_id', $userId)->exists();
     }
+
+    /**
+     * Threads created by this user.
+     */
+    public function threads()
+    {
+        return $this->hasMany(Thread::class);
+    }
+
+    /**
+     * Posts (replies) created by this user.
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }

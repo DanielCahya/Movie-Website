@@ -14,7 +14,13 @@ class ProfileController extends Controller
         // Find the user by username, or throw a 404
         $user = User::where('username', $username)->firstOrFail();
         
-        return view('profile.show', compact('user'));
+        $recentActivity = \App\Models\MediaComment::with('user', 'likes')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        return view('profile.show', compact('user', 'recentActivity'));
     }
 
     public function edit()
@@ -56,5 +62,17 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.show', ['username' => $user->username])
             ->with('success', 'Profile updated successfully!');
+    }
+
+    public function following()
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $followedUsers = $user->following()->orderBy('follows.created_at', 'desc')->get();
+        return view('profile.following', compact('followedUsers'));
+    }
+
+    public function blocked()
+    {
+        return view('profile.blocked');
     }
 }

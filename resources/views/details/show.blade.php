@@ -21,16 +21,27 @@
 
                 <!-- Action Buttons (Watchlist etc) -->
                 <div class="flex flex-wrap gap-3 items-center bg-brand-card/30 p-2.5 rounded-lg border border-white/5">
-                    <button class="flex items-center justify-center bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-1.5 px-4 text-sm rounded transition-colors shadow shadow-brand/20">
+                    @auth
+                    <form action="{{ route('watchlist.toggle') }}" method="POST" class="inline m-0">
+                        @csrf
+                        <input type="hidden" name="media_id" value="{{ $media['id'] }}">
+                        <input type="hidden" name="media_type" value="{{ $type }}">
+                        <button type="submit" class="flex items-center justify-center {{ $inWatchlist ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-brand hover:bg-cyan-400 text-gray-900' }} font-bold py-1.5 px-4 text-sm rounded transition-colors shadow shadow-black/20">
+                            <i class='bx {{ $inWatchlist ? "bx-minus" : "bx-plus" }} text-lg mr-1.5'></i> {{ $inWatchlist ? 'Remove from Watchlist' : 'Watchlist' }}
+                        </button>
+                    </form>
+                    @else
+                    <a href="{{ route('login') }}" class="flex items-center justify-center bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-1.5 px-4 text-sm rounded transition-colors shadow shadow-brand/20">
                         <i class='bx bx-plus text-lg mr-1.5'></i> Watchlist
-                    </button>
-                    <button class="flex items-center justify-center bg-white/5 hover:bg-white/10 text-white font-semibold py-1.5 px-4 text-sm rounded transition-colors border border-white/10">
+                    </a>
+                    @endauth
+                    <button onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!');" class="flex items-center justify-center bg-white/5 hover:bg-white/10 text-white font-semibold py-1.5 px-4 text-sm rounded transition-colors border border-white/10">
                         <i class='bx bx-share-alt text-lg mr-1.5'></i> Share
                     </button>
                 </div>
 
 
-                <!-- 3. MEDIA DETAILS CARD (Animekai style) -->
+                <!-- 3. MEDIA DETAILS CARD-->
                 <div class="bg-brand-card rounded-xl p-4 sm:p-6 shadow-lg border border-white/5 flex flex-col sm:flex-row gap-6">
                     <!-- Poster -->
                     <div class="w-full sm:w-48 lg:w-56 flex-none">
@@ -110,6 +121,10 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 4. COMMENTS SECTION -->
+                @include('details.partials.comments')
+
             </div>
 
             <!-- RIGHT SIDEBAR (Similar/Trending) -->
