@@ -10,7 +10,7 @@
                 <ul class="py-2">
                     @foreach ($hasilcari as $hasilcari)
                         <li>
-                            <a href="{{url('movieshow',$hasilcari['id'])}}" class="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-700/30 last:border-0">
+                            <a href="{{ route('watch', ['type' => 'movie', 'id' => $hasilcari['id']]) }}" class="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-700/30 last:border-0">
                                 @if ($hasilcari['poster_path'])
                                     <img src="https://image.tmdb.org/t/p/w92/{{$hasilcari['poster_path']}}" alt="{{ $hasilcari['title'] }}" class="w-12 rounded shadow-sm">
                                 @else

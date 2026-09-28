@@ -40,6 +40,34 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/ScrollTrigger.min.js"></script>
+
+    <!-- Global GSAP Animations -->
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Navbar Fade & Drop down
+            gsap.from("nav", {
+                y: -100,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+            
+            // Main Content Fade
+            gsap.from("main", {
+                opacity: 0,
+                y: 20,
+                duration: 1,
+                delay: 0.3,
+                ease: "power3.out",
+                clearProps: "transform"
+            });
+        });
+    </script>
     <title>Galiwe</title>
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased min-h-screen flex flex-col">
@@ -84,7 +112,6 @@
                                     {{ substr(Auth::user()->username, 0, 1) }}
                                 </div>
                             @endif
-                            <span class="font-medium hidden md:block">{{ Auth::user()->username }}</span>
                             <i class='bx bx-chevron-down text-xl text-gray-400 group-hover:text-brand transition-colors' :class="{'rotate-180': open}"></i>
                         </button>
 

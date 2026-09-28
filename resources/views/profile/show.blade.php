@@ -29,10 +29,18 @@
                                 <i class='bx bx-edit-alt'></i> Edit Profile
                             </a>
                         @else
-                            <!-- Follow Button Placeholder for Phase 2 -->
-                            <button class="bg-brand hover:bg-cyan-400 text-white px-8 py-2.5 rounded-full font-bold transition-colors shadow-lg shadow-brand/30">
-                                Follow
-                            </button>
+                            <form action="{{ route('follow.toggle', $user->id) }}" method="POST" id="follow-form">
+                                @csrf
+                                @if(Auth::user()->isFollowing($user->id))
+                                    <button type="submit" class="follow-btn bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-8 py-2.5 rounded-full font-bold transition-colors shadow-lg shadow-black/30">
+                                        Following
+                                    </button>
+                                @else
+                                    <button type="submit" class="follow-btn bg-brand hover:bg-cyan-400 text-gray-900 px-8 py-2.5 rounded-full font-bold transition-colors shadow-lg shadow-brand/30">
+                                        Follow
+                                    </button>
+                                @endif
+                            </form>
                         @endif
                     @endauth
                 </div>
@@ -68,4 +76,20 @@
 
     </div>
 </div>
+
+<!-- GSAP Button Animation -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const followBtn = document.querySelector('.follow-btn');
+        if(followBtn) {
+            followBtn.addEventListener('mousedown', () => {
+                gsap.to(followBtn, { scale: 0.9, duration: 0.1 });
+            });
+            followBtn.addEventListener('mouseup', () => {
+                gsap.to(followBtn, { scale: 1.05, duration: 0.2, ease: "back.out(2)" });
+                setTimeout(() => gsap.to(followBtn, { scale: 1, duration: 0.2 }), 200);
+            });
+        }
+    });
+</script>
 </x-indexLay>

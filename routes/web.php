@@ -31,6 +31,9 @@ Route::middleware(['auth'])->group(function(){
     Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/{username}', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    
+    // Follow System
+    Route::post('/profile/{user}/follow', [\App\Http\Controllers\FollowController::class, 'toggle'])->name('follow.toggle');
 });
 
 // Publicly accessible pages
@@ -39,11 +42,8 @@ Route::get('/home',[AdminController::class, 'index']);
 Route::get('/tvshow',[AdminController::class, 'tvshow']);
 Route::get('/animation',[AdminController::class, 'animation']);
 Route::get('/movieList',[AdminController::class, 'movieList']);
-Route::get('/show/{id}',[ShowController::class, 'show']);
-Route::get('/showani/{id}',[ShowController::class, 'showani']);
-Route::get('/showv/{id}',[ShowController::class, 'showtv']);
-Route::get('/movieshow/{id}',[ShowController::class, 'movieshow']);
-Route::get('/showdetailtv/{id}',[ShowController::class, 'showdetailtv']);
+// Consolidated Details Endpoint
+Route::get('/watch/{type}/{id}', [ShowController::class, 'watch'])->name('watch');
 
 // Require auth
 Route::middleware(['auth'])->group(function(){

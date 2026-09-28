@@ -23,7 +23,7 @@
             <div class="absolute inset-0 bg-gradient-to-t from-brand-bg via-transparent to-transparent z-0"></div>
             
             <!-- Hero Content -->
-            <div class="absolute inset-0 flex items-center justify-start z-10">
+            <div class="absolute inset-0 flex items-center justify-start z-10 hero-content">
                 <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 pt-20">
                     <div class="max-w-3xl">
                         <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-wider mb-2 drop-shadow-lg">
@@ -50,7 +50,7 @@
                         </p>
                         
                         <div class="flex items-center space-x-4">
-                            <a href="{{url('show', $hero['id'])}}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
+                            <a href="{{ route('watch', ['type' => 'movie', 'id' => $hero['id']]) }}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
                                 <i class='bx bx-info-circle text-2xl mr-2'></i>
                                 Details
                             </a>
@@ -80,14 +80,14 @@
             $id = $item['id'];
             $title = $item['title'] ?? $item['name'];
             $poster = $item['poster_path'];
-            $url = $type === 'movie' ? url('show', $id) : url('showv', $id);
+            $url = route('watch', ['type' => $type, 'id' => $id]);
             $year = isset($item['release_date']) ? \Carbon\Carbon::parse($item['release_date'])->format('Y') : 
                     (isset($item['first_air_date']) ? \Carbon\Carbon::parse($item['first_air_date'])->format('Y') : '');
             
             return '
-                <a href="'.$url.'" class="flex-none w-36 md:w-48 xl:w-56 group cursor-pointer snap-start">
-                    <div class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg transition-transform duration-300 group-hover:scale-105 group-hover:ring-2 group-hover:ring-brand/50">
-                        <img src="https://image.tmdb.org/t/p/w500/'.$poster.'" alt="'.htmlspecialchars($title).'" class="w-full h-full object-cover" loading="lazy">
+                <a href="'.$url.'" class="movie-card flex-none w-36 md:w-48 xl:w-56 cursor-pointer snap-start opacity-0 transition-all duration-300 hover:scale-[1.08] hover:-translate-y-2 group">
+                    <div class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg ring-1 ring-white/5 group-hover:ring-brand/80 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-300">
+                        <img src="https://image.tmdb.org/t/p/w500/'.$poster.'" alt="'.htmlspecialchars($title).'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
                         <!-- Play Overlay -->
                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <i class="bx bx-play-circle text-5xl text-brand drop-shadow-md"></i>
@@ -106,11 +106,11 @@
     <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-12 space-y-16 -mt-20 relative z-20">
         
         <!-- NOW PLAYING -->
-        <section>
+        <section class="movie-section">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Now Playing</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar">
+            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
                 @foreach ($nowPlaying as $movie)
                     {!! $renderCard($movie, 'movie', $genres) !!}
                 @endforeach
@@ -118,11 +118,11 @@
         </section>
 
         <!-- TRENDING MOVIES -->
-        <section>
+        <section class="movie-section">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Trending Movies</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar">
+            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
                 @foreach ($popularMovies as $movie)
                     {!! $renderCard($movie, 'movie', $genres) !!}
                 @endforeach
@@ -130,11 +130,11 @@
         </section>
 
         <!-- NEW TV SHOWS -->
-        <section>
+        <section class="movie-section">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">New TV Shows</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar">
+            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
                 @foreach ($newtv as $tv)
                     {!! $renderCard($tv, 'tv', $genresTv) !!}
                 @endforeach
@@ -142,11 +142,11 @@
         </section>
 
         <!-- ANIME -->
-        <section>
+        <section class="movie-section">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Popular Anime</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar">
+            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
                 @foreach ($anime as $ani)
                     {!! $renderCard($ani, 'movie', $genres) !!}
                 @endforeach
@@ -166,4 +166,36 @@
             scrollbar-width: none;  /* Firefox */
         }
     </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Animate each section as it enters the viewport
+            gsap.utils.toArray('.movie-section').forEach(section => {
+                gsap.to(section.querySelectorAll('.movie-card'), {
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 85%", // when the top of the section hits 85% of the viewport
+                    },
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.5,
+                    stagger: 0.08, // Stagger the appearance of each card
+                    ease: "power2.out",
+                    // Reset initial state to prevent flash before scrollTrigger fires
+                    onStart: function() {
+                        gsap.set(section.querySelectorAll('.movie-card'), { y: 40 });
+                    }
+                });
+            });
+            
+            // Hero section animation
+            gsap.from(".hero-content", {
+                opacity: 0,
+                y: 30,
+                duration: 1,
+                delay: 0.5,
+                ease: "power3.out"
+            });
+        });
+    </script>
 </x-indexLay>

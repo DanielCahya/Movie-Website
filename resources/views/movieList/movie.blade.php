@@ -3,7 +3,7 @@
         <h2 class="text-3xl font-bold text-white mb-8 border-l-4 border-brand pl-4">All Movies</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             @foreach ($topRated as $movie)
-            <a href="{{url('movieshow', $movie['id'])}}" class="group cursor-pointer">
+            <a href="{{ route('watch', ['type' => 'movie', 'id' => $movie['id']]) }}" class="group cursor-pointer">
                 <div class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg transition-transform duration-300 group-hover:scale-105 group-hover:ring-2 group-hover:ring-brand/50">
                     <img src="{{'https://image.tmdb.org/t/p/w500/'.$movie['poster_path']}}" alt="{{$movie['title']}}" class="w-full h-full object-cover" loading="lazy">
                     <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
