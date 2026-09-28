@@ -2,7 +2,7 @@
 <div class="min-h-screen bg-brand-bg py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
         <!-- Profile Header -->
-        <div class="bg-brand-card rounded-3xl shadow-2xl overflow-hidden border border-gray-800 p-8 relative">
+        <div class="bg-brand-card rounded-3xl shadow-2xl overflow-hidden border border-white/5 p-8 relative">
             
             @if(session('success'))
             <div class="absolute top-4 right-4 bg-green-500/20 backdrop-blur-md border border-green-500/50 text-green-100 px-4 py-2 rounded-xl text-sm shadow-lg z-10">
@@ -61,21 +61,41 @@
             </div>
         </div>
 
-        <!-- Future Tabs (Watchlist, Forums) -->
+        <!-- Future Tabs -->
         <div class="mt-8">
             <div class="flex border-b border-gray-800 gap-8">
                 <button class="pb-4 text-brand border-b-2 border-brand font-medium">Recent Activity</button>
-                <button class="pb-4 text-gray-500 hover:text-gray-300 font-medium transition-colors">Watchlist (Coming Soon)</button>
             </div>
             
-            <div class="py-8 text-center text-gray-500">
-                <i class='bx bx-ghost text-6xl mb-4 opacity-50'></i>
-                <p>Nothing to see here yet.</p>
+            <div class="mt-6 space-y-4">
+                @forelse($recentActivity as $activity)
+                    <div class="bg-brand-card border border-gray-800 rounded-xl p-5 shadow-lg flex gap-4">
+                        <div class="flex-none">
+                            <i class='bx bx-message-square-dots text-3xl text-brand opacity-80'></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="text-sm text-gray-400 mb-1">
+                                Commented on <a href="{{ route('watch', ['type' => $activity->media_type, 'id' => $activity->media_id]) }}" class="text-brand hover:underline font-semibold">{{ $activity->media_title ?? 'a ' . ucfirst($activity->media_type) }}</a>
+                                <span class="mx-2">•</span>
+                                {{ $activity->created_at->diffForHumans() }}
+                            </div>
+                            <p class="text-gray-200 text-sm italic border-l-2 border-gray-700 pl-3 py-1">"{{ Str::limit($activity->content, 150) }}"</p>
+                            
+                            <div class="mt-3 flex gap-4 text-xs font-semibold text-gray-500">
+                                <span class="flex items-center gap-1"><i class='bx bxs-heart text-red-500'></i> {{ $activity->likes->count() }} Likes</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-8 text-center text-gray-500 bg-brand-card border border-gray-800 rounded-xl">
+                        <i class='bx bx-ghost text-6xl mb-4 opacity-50'></i>
+                        <p>No recent activity yet.</p>
+                    </div>
+                @endforelse
             </div>
-        </div>
-
     </div>
 </div>
+
 
 <!-- GSAP Button Animation -->
 <script>

@@ -73,7 +73,7 @@
 <body class="bg-brand-bg text-white font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Navigation Bar -->
-    <nav class="fixed w-full z-50 bg-brand-bg/90 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+    <nav class="fixed top-0 left-0 w-full z-50 bg-brand-bg/90 backdrop-blur-md border-b border-white/5 transition-all duration-300">
         <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
@@ -89,6 +89,7 @@
                     <a href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Tv Shows</a>
                     <a href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Movies</a>
                     <a href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium">Anime</a>
+                    <a href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Community</a>
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
                     <a href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Admin</a>
                     @endif
@@ -98,7 +99,7 @@
                 <div class="flex items-center space-x-4">
                     <!-- Search Bar (Livewire component) -->
                     <div class="hidden md:block">
-                        <livewire:search>
+                        <livewire:search />
                     </div>
                     
                     @auth
@@ -126,10 +127,12 @@
                              class="absolute right-0 mt-3 w-52 bg-brand-card border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
                              style="display: none;">
                             
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
-                                <i class='bx bx-user text-lg text-brand'></i> Profile
+                            <a href="{{ route('profile.show', Auth::user()->username) }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
+                                <i class='bx bx-user-circle text-lg text-brand'></i> Public Profile
                             </a>
-                            
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
+                                <i class='bx bx-cog text-lg text-brand'></i> Settings
+                            </a>
                             <a href="{{ url('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
                                 <i class='bx bx-log-out text-lg'></i> Sign Out
                             </a>

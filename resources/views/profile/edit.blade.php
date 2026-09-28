@@ -1,31 +1,7 @@
 <x-indexLay>
 <div class="bg-brand-bg min-h-[calc(100vh-4rem)] flex">
     <!-- Sidebar -->
-    <aside class="w-64 flex-shrink-0 bg-brand-card/30 border-r border-white/5 hidden md:block">
-        <nav class="p-4 space-y-1">
-            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-white/5 text-white border-l-2 border-brand">
-                <i class='bx bx-user text-xl'></i> Edit Profile
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-l-2 border-transparent">
-                <i class='bx bx-bookmark text-xl'></i> Watchlist
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-l-2 border-transparent">
-                <i class='bx bx-group text-xl'></i> Followed Users
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-l-2 border-transparent">
-                <i class='bx bx-history text-xl'></i> Watch History
-            </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-l-2 border-transparent">
-                <i class='bx bx-block text-xl'></i> Blocked Users
-            </a>
-            
-            <div class="my-4 border-t border-white/5"></div>
-            
-            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border-l-2 border-transparent">
-                <i class='bx bx-cog text-xl'></i> Settings
-            </a>
-        </nav>
-    </aside>
+    @include('profile.partials.sidebar')
 
     <!-- Main Content -->
     <main class="flex-1 p-6 lg:p-12 overflow-y-auto">
