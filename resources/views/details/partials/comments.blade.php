@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
         <h3 class="text-lg font-medium text-gray-300">
-            {{ $comments->count() }} comments
+            {{ $comments->total() }} comments
         </h3>
         <div class="flex items-center bg-brand-card rounded-md p-1">
             <button class="px-4 py-1.5 text-xs font-semibold text-white bg-white/10 rounded shadow-sm">Best</button>
@@ -354,4 +354,11 @@
             </div>
         @endforelse
     </div>
+
+    <!-- Pagination Links -->
+    @if($comments->hasPages())
+        <div class="mt-8 border-t border-white/5 pt-6">
+            {{ $comments->links() }}
+        </div>
+    @endif
 </div>

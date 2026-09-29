@@ -34,7 +34,7 @@ class ShowController extends Controller
             ->where('media_type', $type)
             ->whereNull('parent_id')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(5);
 
         return view('details.show', [
             'media' => $this->fetchMedia($type, $id), 
