@@ -24,8 +24,9 @@
                         
                         <a href="{{ $url }}" class="group block relative overflow-hidden rounded-xl bg-brand-card ring-1 ring-white/10 hover:ring-brand/50 transition-all duration-300">
                             <!-- Poster Container -->
-                            <div class="relative aspect-[2/3] overflow-hidden bg-black">
-                                <img src="{{ $poster }}" alt="{{ $title }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                            <div x-data="{ loaded: false }" class="relative aspect-[2/3] overflow-hidden bg-brand-card">
+                                <div x-show="!loaded" class="absolute inset-0 bg-gray-800 animate-pulse z-10"></div>
+                                <img x-init="$el.complete && (loaded = true)" @load="loaded = true" :class="loaded ? 'opacity-100' : 'opacity-0'" src="{{ $poster }}" alt="{{ $title }}" class="w-full h-full object-cover transform group-hover:scale-110 transition-all duration-500">
                                 <!-- Top Badges -->
                                 <div class="absolute top-2 left-2 flex gap-1">
                                     <span class="bg-brand text-gray-900 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow">{{ $type }}</span>
