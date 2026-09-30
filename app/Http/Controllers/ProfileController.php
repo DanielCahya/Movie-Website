@@ -64,6 +64,20 @@ class ProfileController extends Controller
             ->with('success', 'Profile updated successfully!');
     }
 
+    public function deleteAvatar()
+    {
+        $user = Auth::user();
+
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+            $user->avatar = null;
+            $user->save();
+            return back()->with('success', 'Avatar deleted successfully!');
+        }
+
+        return back()->with('error', 'No avatar found to delete.');
+    }
+
     public function following()
     {
         $user = \Illuminate\Support\Facades\Auth::user();

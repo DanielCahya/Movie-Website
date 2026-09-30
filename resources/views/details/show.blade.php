@@ -1,4 +1,9 @@
 <x-indexLay>
+    @section('title', ($media['title'] ?? $media['name'] ?? 'Details') . ' - Galiwe')
+    @section('meta_description', strlen($desc = strip_tags($media['overview'] ?? 'Discover details on Galiwe.')) > 150 ? substr($desc, 0, 150) . '...' : $desc)
+    @section('og_type', $type === 'movie' ? 'video.movie' : 'video.tv_show')
+    @section('og_image', isset($media['poster_path']) ? 'https://image.tmdb.org/t/p/w500/'.$media['poster_path'] : asset('default-og.jpg'))
+
     <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-8 relative z-20">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             

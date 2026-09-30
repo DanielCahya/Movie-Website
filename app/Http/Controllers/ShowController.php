@@ -9,11 +9,30 @@ use Illuminate\Support\Facades\Cache;
 class ShowController extends Controller
 {
     public function fetchMedia($type, $id) {
-        return Cache::remember("tmdb:{$type}:{$id}", now()->addHours(12), function () use ($type, $id) {
-            return Http::withToken(config('services.tmdb.token'))
+        // 1. Try to fetch from local MySQL database
+        $localMedia = \App\Models\Media::where('tmdb_id', $id)->where('media_type', $type)->first();
+        
+        if ($localMedia && $localMedia->data) {
+            return $localMedia->data; // Loads instantly from MySQL
+        }
+
+        // 2. If not in DB, fetch from TMDB
+        $tmdbData = Http::withToken(config('services.tmdb.token'))
             ->get("https://api.themoviedb.org/3/{$type}/{$id}?append_to_response=credits,videos,images,similar")
             ->json();
-        });
+
+        // 3. Save to local MySQL database forever!
+        if (!isset($tmdbData['success']) || $tmdbData['success'] !== false) {
+            \App\Models\Media::create([
+                'tmdb_id' => $id,
+                'media_type' => $type,
+                'title' => $type === 'movie' ? ($tmdbData['title'] ?? '') : ($tmdbData['name'] ?? ''),
+                'poster_path' => $tmdbData['poster_path'] ?? null,
+                'data' => $tmdbData
+            ]);
+        }
+
+        return $tmdbData;
     }
 
     public function watch($type, $id) {
