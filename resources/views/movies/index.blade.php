@@ -106,54 +106,90 @@
         };
     @endphp
 
-    <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-12 space-y-16 -mt-20 relative z-20">
+    <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-12 space-y-16 relative z-20">
         
         <!-- NOW PLAYING -->
-        <section class="movie-section">
+        <section class="movie-section relative group/section" x-data="{ 
+            scrollLeft() { $refs.slider.scrollBy({ left: -window.innerWidth / 2, behavior: 'smooth' }) }, 
+            scrollRight() { $refs.slider.scrollBy({ left: window.innerWidth / 2, behavior: 'smooth' }) } 
+        }">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Now Playing</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
+            <button @click="scrollLeft" class="absolute left-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-r-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-l-0">
+                <i class='bx bx-chevron-left text-4xl md:text-5xl'></i>
+            </button>
+            <div x-ref="slider" class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar scroll-smooth relative z-20">
                 @foreach ($nowPlaying as $movie)
                     {!! $renderCard($movie, 'movie', $genres) !!}
                 @endforeach
             </div>
+            <button @click="scrollRight" class="absolute right-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-l-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-r-0">
+                <i class='bx bx-chevron-right text-4xl md:text-5xl'></i>
+            </button>
         </section>
 
         <!-- TRENDING MOVIES -->
-        <section class="movie-section">
+        <section class="movie-section relative group/section" x-data="{ 
+            scrollLeft() { $refs.slider.scrollBy({ left: -window.innerWidth / 2, behavior: 'smooth' }) }, 
+            scrollRight() { $refs.slider.scrollBy({ left: window.innerWidth / 2, behavior: 'smooth' }) } 
+        }">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Trending Movies</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
+            <button @click="scrollLeft" class="absolute left-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-r-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-l-0">
+                <i class='bx bx-chevron-left text-4xl md:text-5xl'></i>
+            </button>
+            <div x-ref="slider" class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar scroll-smooth relative z-20">
                 @foreach ($popularMovies as $movie)
                     {!! $renderCard($movie, 'movie', $genres) !!}
                 @endforeach
             </div>
+            <button @click="scrollRight" class="absolute right-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-l-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-r-0">
+                <i class='bx bx-chevron-right text-4xl md:text-5xl'></i>
+            </button>
         </section>
 
         <!-- NEW TV SHOWS -->
-        <section class="movie-section">
+        <section class="movie-section relative group/section" x-data="{ 
+            scrollLeft() { $refs.slider.scrollBy({ left: -window.innerWidth / 2, behavior: 'smooth' }) }, 
+            scrollRight() { $refs.slider.scrollBy({ left: window.innerWidth / 2, behavior: 'smooth' }) } 
+        }">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">New TV Shows</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
+            <button @click="scrollLeft" class="absolute left-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-r-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-l-0">
+                <i class='bx bx-chevron-left text-4xl md:text-5xl'></i>
+            </button>
+            <div x-ref="slider" class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar scroll-smooth relative z-20">
                 @foreach ($newtv as $tv)
                     {!! $renderCard($tv, 'tv', $genresTv) !!}
                 @endforeach
             </div>
+            <button @click="scrollRight" class="absolute right-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-l-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-r-0">
+                <i class='bx bx-chevron-right text-4xl md:text-5xl'></i>
+            </button>
         </section>
 
         <!-- ANIME -->
-        <section class="movie-section">
+        <section class="movie-section relative group/section" x-data="{ 
+            scrollLeft() { $refs.slider.scrollBy({ left: -window.innerWidth / 2, behavior: 'smooth' }) }, 
+            scrollRight() { $refs.slider.scrollBy({ left: window.innerWidth / 2, behavior: 'smooth' }) } 
+        }">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-white border-l-4 border-brand pl-3">Popular Anime</h2>
             </div>
-            <div class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar">
+            <button @click="scrollLeft" class="absolute left-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-r-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-l-0">
+                <i class='bx bx-chevron-left text-4xl md:text-5xl'></i>
+            </button>
+            <div x-ref="slider" class="flex overflow-x-auto space-x-4 md:space-x-6 pb-8 pt-4 px-2 -mx-2 snap-x snap-mandatory hide-scrollbar scroll-smooth relative z-20">
                 @foreach ($anime as $ani)
                     {!! $renderCard($ani, 'movie', $genres) !!}
                 @endforeach
             </div>
+            <button @click="scrollRight" class="absolute right-0 top-[55%] -translate-y-1/2 z-30 bg-black/50 hover:bg-black/80 text-white w-10 md:w-12 h-32 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity duration-300 backdrop-blur-sm rounded-l-lg shadow-xl cursor-pointer hidden sm:flex border border-white/5 border-r-0">
+                <i class='bx bx-chevron-right text-4xl md:text-5xl'></i>
+            </button>
         </section>
         
     </div>

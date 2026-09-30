@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function(){
     // Profile Routes
     Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile/avatar', [\App\Http\Controllers\ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     
     // Profile Sidebar Additions
     Route::get('/profile/watchlist', [WatchlistController::class, 'index'])->name('profile.watchlist');
@@ -75,7 +76,7 @@ Route::middleware(['auth'])->group(function(){
   Route::post('/forum/store/thread', [ForumController::class, 'storeThread'])->name('forum.store');
   Route::post('/forum/thread/{thread_id}/reply', [ForumController::class, 'storePost'])->name('forum.reply');
 
-  // Watchlist Toggle
+  // Watchlist Toggles
   Route::post('/watchlist/toggle', [WatchlistController::class, 'toggle'])->name('watchlist.toggle');
 
   // Media Comments

@@ -48,36 +48,67 @@
     <script>
         document.addEventListener("DOMContentLoaded", (event) => {
             gsap.registerPlugin(ScrollTrigger);
-
-            // Navbar Fade & Drop down
-            gsap.from("nav", {
-                y: -100,
-                opacity: 0,
-                duration: 1,
-                ease: "power3.out"
-            });
-            
-            // Main Content Fade
-            gsap.from("main", {
-                opacity: 0,
-                y: 20,
-                duration: 1,
-                delay: 0.3,
-                ease: "power3.out",
-                clearProps: "transform"
-            });
         });
     </script>
-    <title>Galiwe</title>
+    <style>
+        /* Aggressive Spotlight Effect for Movie Cards */
+        .spotlight-group:has(.spotlight-card:hover) .spotlight-card:not(:hover) {
+            transform: scale(0.85) !important;
+            opacity: 0.3 !important;
+        }
+        .spotlight-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            will-change: transform, opacity;
+        }
+        .spotlight-card:hover {
+            transform: scale(1.2) translateY(-12px) !important;
+            opacity: 1 !important;
+            z-index: 50 !important;
+        }
+        /* Fix clipping in scrollable carousels */
+        .spotlight-scroll-container {
+            padding-top: 2rem !important;
+            padding-bottom: 3rem !important;
+            margin-top: -2rem !important;
+            margin-bottom: -3rem !important;
+            clip-path: inset(-3rem -3rem -3rem -3rem);
+        }
+    </style>
+    <title>@yield('title', 'Galiwe')</title>
+    <meta name="description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', 'Galiwe')">
+    <meta property="og:description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
+    <meta property="og:image" content="@yield('og_image', asset('default-og.jpg'))">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url()->current() }}">
+    <meta property="twitter:title" content="@yield('title', 'Galiwe')">
+    <meta property="twitter:description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
+    <meta property="twitter:image" content="@yield('og_image', asset('default-og.jpg'))">
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Navigation Bar -->
-    <nav class="fixed top-0 left-0 w-full z-50 bg-brand-bg/90 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+    <nav x-data="{ mobileMenuOpen: false }" class="fixed top-0 left-0 w-full z-50 bg-brand-bg/90 backdrop-blur-md border-b border-white/5 transition-all duration-300">
         <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center">
+                <!-- Mobile Menu Button & Logo -->
+                <div class="flex items-center gap-3 md:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white focus:outline-none">
+                        <i class='bx text-2xl' :class="mobileMenuOpen ? 'bx-x' : 'bx-menu'"></i>
+                    </button>
+                    <a href="{{ url('home') }}" class="text-xl font-bold tracking-tighter text-white">
+                        Ga<span class="text-brand">li</span>we
+                    </a>
+                </div>
+
+                <!-- Desktop Logo -->
+                <div class="hidden md:flex flex-shrink-0 items-center">
                     <a href="{{ url('home') }}" class="text-2xl font-bold tracking-tighter text-white">
                         Ga<span class="text-brand">li</span>we
                     </a>
@@ -146,6 +177,38 @@
                     </div>
                     @endauth
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="md:hidden absolute top-16 left-0 w-full bg-brand-card border-b border-white/10 shadow-2xl z-40"
+             style="display: none;">
+            <div class="px-4 py-4 space-y-3 flex flex-col">
+                <livewire:search />
+                
+                <a href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Home</a>
+                <a href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Tv Shows</a>
+                <a href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Movies</a>
+                <a href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Anime</a>
+                <a href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Community</a>
+                
+                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
+                <a href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Admin</a>
+                @endif
+                
+                @guest
+                <div class="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
+                    <a href="{{ url('login') }}" class="text-center text-gray-300 hover:text-white text-base font-medium transition-colors py-2">Login</a>
+                    <a href="{{ url('login?register=true') }}" class="text-center bg-brand hover:bg-cyan-400 text-white px-5 py-2 rounded-full text-base font-bold transition-colors">Sign Up</a>
+                </div>
+                @endguest
             </div>
         </div>
     </nav>

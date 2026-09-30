@@ -42,9 +42,17 @@
                             </div>
                             <input type="file" name="avatar" id="avatar" accept="image/jpeg,image/png,image/gif" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         </div>
-                        @error('avatar')
-                            <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <div class="flex flex-col gap-2">
+                            <span class="text-sm text-gray-300">Click picture to change</span>
+                            @if($user->avatar)
+                                <button type="button" onclick="document.getElementById('delete-avatar-form').submit();" class="text-xs text-red-400 hover:text-red-300 font-bold tracking-wider uppercase text-left transition-colors">
+                                    <i class='bx bx-trash mr-1'></i> Remove Picture
+                                </button>
+                            @endif
+                            @error('avatar')
+                                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 
@@ -144,6 +152,13 @@
                     </button>
                 </div>
             </form>
+            
+            @if($user->avatar)
+                <form id="delete-avatar-form" action="{{ route('profile.avatar.delete') }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endif
         </div>
     </main>
 </div>
