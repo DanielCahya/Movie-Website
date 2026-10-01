@@ -76,6 +76,7 @@
     </style>
     <title>@yield('title', 'Galiwe')</title>
     <meta name="description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
+    <meta name="view-transition" content="same-origin" />
     
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="@yield('og_type', 'website')">
@@ -94,7 +95,7 @@
 <body class="bg-brand-bg text-white font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Navigation Bar -->
-    <nav x-data="{ mobileMenuOpen: false }" class="fixed top-0 left-0 w-full z-50 bg-brand-bg/90 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+    <nav x-data="{ mobileMenuOpen: false }" class="fixed top-0 left-0 w-full z-50 bg-brand-bg/60 backdrop-blur-xl border-b border-white/10 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
         <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16">
             <div class="flex items-center justify-between h-16">
                 <!-- Mobile Menu Button & Logo -->
