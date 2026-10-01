@@ -51,7 +51,7 @@
                     <!-- Poster -->
                     <div class="w-full sm:w-48 lg:w-56 flex-none">
                         <div class="relative rounded-lg overflow-hidden shadow-xl aspect-[2/3] ring-1 ring-white/10">
-                            <img src="{{ isset($media['poster_path']) && $media['poster_path'] ? 'https://image.tmdb.org/t/p/w500/'.$media['poster_path'] : 'https://via.placeholder.com/500x750' }}" alt="Poster" class="w-full h-full object-cover">
+                            <img style="view-transition-name: poster-{{ $type }}-{{ $media['id'] }}" src="{{ isset($media['poster_path']) && $media['poster_path'] ? 'https://image.tmdb.org/t/p/w500/'.$media['poster_path'] : 'https://via.placeholder.com/500x750' }}" alt="Poster" class="w-full h-full object-cover">
                             <div class="absolute top-2 left-2 bg-brand text-gray-900 text-xs font-black tracking-wider px-2 py-1 rounded shadow">
                                 {{ strtoupper($type) }}
                             </div>

@@ -16,7 +16,7 @@
                         <li>
                             <a href="{{ route('watch', ['type' => $item['media_type'] ?? 'movie', 'id' => $item['id']]) }}" class="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-700/30 last:border-0 group">
                                 @if (isset($item['poster_path']) && $item['poster_path'])
-                                    <img src="https://image.tmdb.org/t/p/w92/{{$item['poster_path']}}" alt="{{ $item['title'] ?? $item['name'] }}" class="w-10 rounded shadow-sm group-hover:scale-105 transition-transform">
+                                    <img style="view-transition-name: poster-{{ $item['media_type'] ?? 'movie' }}-{{ $item['id'] }}" src="https://image.tmdb.org/t/p/w92/{{$item['poster_path']}}" alt="{{ $item['title'] ?? $item['name'] }}" class="w-10 rounded shadow-sm group-hover:scale-105 transition-transform">
                                 @else
                                     <div class="w-10 h-14 bg-gray-800 rounded flex items-center justify-center shadow-sm">
                                         <i class='bx bx-movie text-gray-500'></i>

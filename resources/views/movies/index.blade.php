@@ -85,7 +85,7 @@
                     (isset($item['first_air_date']) ? \Carbon\Carbon::parse($item['first_air_date'])->format('Y') : '');
             
             return '
-                <a href="'.$url.'" class="movie-card flex-none w-36 md:w-48 xl:w-56 cursor-pointer snap-start opacity-0 transition-all duration-300 hover:scale-[1.08] hover:-translate-y-2 group">
+                <a href="'.$url.'" onclick="this.querySelector(\'img\').style.viewTransitionName = \'poster-'.$type.'-'.$id.'\'" class="movie-card flex-none w-36 md:w-48 xl:w-56 cursor-pointer snap-start opacity-0 transition-all duration-300 hover:scale-[1.08] hover:-translate-y-2 group">
                     <div x-data="{ loaded: false }" class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg ring-1 ring-white/5 group-hover:ring-brand/80 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-300">
                         <!-- Skeleton Loader -->
                         <div x-show="!loaded" class="absolute inset-0 bg-gray-800 animate-pulse"></div>
