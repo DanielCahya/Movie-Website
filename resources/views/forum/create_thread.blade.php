@@ -1,7 +1,7 @@
 <x-indexLay>
 <div class="container mx-auto px-4 py-12 max-w-3xl">
     <div class="mb-8 flex items-center text-sm text-gray-400 gap-2">
-        <a href="{{ route('forum.index') }}" class="hover:text-brand transition-colors"><i class='bx bx-home'></i> Forums</a>
+        <a wire:navigate.hover href="{{ route('forum.index') }}" class="hover:text-brand transition-colors"><i class='bx bx-home'></i> Forums</a>
         <i class='bx bx-chevron-right text-gray-600'></i>
         <span class="text-white">Create New Thread</span>
     </div>
@@ -62,7 +62,7 @@
             </div>
 
             <div class="flex items-center justify-between pt-6 border-t border-gray-700/50 mt-8">
-                <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('forum.index') }}" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                <a wire:navigate.hover href="{{ url()->previous() !== url()->current() ? url()->previous() : route('forum.index') }}" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">
                     Cancel
                 </a>
                 <button type="submit" class="bg-brand hover:bg-teal-400 text-brand-dark font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-brand/20 hover:shadow-brand/40 flex items-center gap-2 transform hover:-translate-y-0.5">

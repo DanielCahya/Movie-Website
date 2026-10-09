@@ -36,7 +36,7 @@
                     </div>
 
                     <div class="pt-6 flex gap-4">
-                        <a href="{{ url('admin') }}" class="w-1/3 flex justify-center items-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-medium py-3 rounded-xl transition-all shadow-sm hover:shadow">
+                        <a wire:navigate.hover href="{{ url('admin') }}" class="w-1/3 flex justify-center items-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-medium py-3 rounded-xl transition-all shadow-sm hover:shadow">
                             Cancel
                         </a>
                         <button type="submit" class="w-2/3 bg-brand hover:bg-cyan-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-brand/30 transition-all hover:-translate-y-0.5">

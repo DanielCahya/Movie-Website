@@ -3,11 +3,11 @@
     <div class="flex justify-between items-center mb-8 border-b border-gray-700/50 pb-4">
         <h1 class="text-3xl font-bold text-white border-l-4 border-brand pl-4">Community Forums</h1>
         @auth
-            <a href="{{ route('forum.create') }}" class="bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-6 rounded-full transition-colors shadow-lg shadow-brand/20 flex items-center gap-2">
+            <a wire:navigate.hover href="{{ route('forum.create') }}" class="bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-6 rounded-full transition-colors shadow-lg shadow-brand/20 flex items-center gap-2">
                 <i class='bx bx-plus text-lg'></i> New Thread
             </a>
         @else
-            <a href="{{ route('login') }}" class="text-brand hover:text-white transition-colors">Login to Post</a>
+            <a wire:navigate.hover href="{{ route('login') }}" class="text-brand hover:text-white transition-colors">Login to Post</a>
         @endauth
     </div>
 
@@ -16,7 +16,7 @@
         <div class="lg:col-span-2 space-y-4">
             <h2 class="text-xl font-semibold text-gray-300 mb-4">Categories</h2>
             @foreach($categories as $category)
-                <a href="{{ route('forum.category', $category->slug) }}" class="block bg-brand-card hover:bg-gray-800/80 border border-gray-700/50 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-brand/5 group relative overflow-hidden">
+                <a wire:navigate.hover href="{{ route('forum.category', $category->slug) }}" class="block bg-brand-card hover:bg-gray-800/80 border border-gray-700/50 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-brand/5 group relative overflow-hidden">
                     <!-- Subtle glow effect on hover -->
                     <div class="absolute inset-0 bg-gradient-to-r from-brand/0 via-brand/5 to-brand/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform -translate-x-full group-hover:translate-x-full"></div>
                     
@@ -42,14 +42,14 @@
                     <ul class="space-y-4">
                         @foreach($recentThreads as $thread)
                             <li class="border-b border-gray-700/50 last:border-0 pb-4 last:pb-0 group">
-                                <a href="{{ route('forum.thread', $thread->slug) }}" class="block hover:text-brand transition-colors text-white font-medium line-clamp-2 mb-2">
+                                <a wire:navigate.hover href="{{ route('forum.thread', $thread->slug) }}" class="block hover:text-brand transition-colors text-white font-medium line-clamp-2 mb-2">
                                     {{ $thread->title }}
                                 </a>
                                 <div class="flex items-center text-xs text-gray-500 gap-3">
                                     <span class="bg-gray-800 px-2 py-1 rounded text-gray-400 whitespace-nowrap">{{ $thread->category->name }}</span>
                                     <span class="flex items-center gap-1">
                                         <i class='bx bx-user text-gray-600'></i> 
-                                        <a href="{{ route('profile.show', $thread->user->username) }}" class="hover:text-white transition-colors">{{ $thread->user->username }}</a>
+                                        <a wire:navigate.hover href="{{ route('profile.show', $thread->user->username) }}" class="hover:text-white transition-colors">{{ $thread->user->username }}</a>
                                     </span>
                                 </div>
                             </li>

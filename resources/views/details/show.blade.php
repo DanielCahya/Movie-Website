@@ -36,7 +36,7 @@
                         </button>
                     </form>
                     @else
-                    <a href="{{ route('login') }}" class="flex items-center justify-center bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-1.5 px-4 text-sm rounded transition-colors shadow shadow-brand/20">
+                    <a wire:navigate.hover href="{{ route('login') }}" class="flex items-center justify-center bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-1.5 px-4 text-sm rounded transition-colors shadow shadow-brand/20">
                         <i class='bx bx-plus text-lg mr-1.5'></i> Watchlist
                     </a>
                     @endauth

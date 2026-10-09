@@ -103,27 +103,27 @@
                     <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 hover:text-white focus:outline-none">
                         <i class='bx text-2xl' :class="mobileMenuOpen ? 'bx-x' : 'bx-menu'"></i>
                     </button>
-                    <a href="{{ url('home') }}" class="text-xl font-bold tracking-tighter text-white">
+                    <a wire:navigate.hover href="{{ url('home') }}" class="text-xl font-bold tracking-tighter text-white">
                         Ga<span class="text-brand">li</span>we
                     </a>
                 </div>
 
                 <!-- Desktop Logo -->
                 <div class="hidden md:flex flex-shrink-0 items-center">
-                    <a href="{{ url('home') }}" class="text-2xl font-bold tracking-tighter text-white">
+                    <a wire:navigate.hover href="{{ url('home') }}" class="text-2xl font-bold tracking-tighter text-white">
                         Ga<span class="text-brand">li</span>we
                     </a>
                 </div>
                 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex flex-grow justify-center space-x-8">
-                    <a href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Home</a>
-                    <a href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Tv Shows</a>
-                    <a href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Movies</a>
-                    <a href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium">Anime</a>
-                    <a href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Community</a>
+                    <a wire:navigate.hover href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Home</a>
+                    <a wire:navigate.hover href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Tv Shows</a>
+                    <a wire:navigate.hover href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Movies</a>
+                    <a wire:navigate.hover href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium">Anime</a>
+                    <a wire:navigate.hover href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Community</a>
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
-                    <a href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Admin</a>
+                    <a wire:navigate.hover href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Admin</a>
                     @endif
                 </div>
                 
@@ -159,13 +159,13 @@
                              class="absolute right-0 mt-3 w-52 bg-brand-card border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 py-1"
                              style="display: none;">
                             
-                            <a href="{{ route('profile.show', Auth::user()->username) }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
+                            <a wire:navigate.hover href="{{ route('profile.show', Auth::user()->username) }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
                                 <i class='bx bx-user-circle text-lg text-brand'></i> Public Profile
                             </a>
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
+                            <a wire:navigate.hover href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
                                 <i class='bx bx-cog text-lg text-brand'></i> Settings
                             </a>
-                            <a href="{{ url('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                            <a wire:navigate.hover href="{{ url('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
                                 <i class='bx bx-log-out text-lg'></i> Sign Out
                             </a>
                         </div>
@@ -173,8 +173,8 @@
                     @else
                     <!-- Login / Register -->
                     <div class="flex items-center space-x-4 ml-2">
-                        <a href="{{ url('login') }}" class="text-gray-300 hover:text-white text-base font-medium transition-colors">Login</a>
-                        <a href="{{ url('login?register=true') }}" class="bg-brand hover:bg-cyan-400 text-white px-5 py-2 rounded-full text-base font-bold transition-colors shadow-lg shadow-brand/20">Sign Up</a>
+                        <a wire:navigate.hover href="{{ url('login') }}" class="text-gray-300 hover:text-white text-base font-medium transition-colors">Login</a>
+                        <a wire:navigate.hover href="{{ url('login?register=true') }}" class="bg-brand hover:bg-cyan-400 text-white px-5 py-2 rounded-full text-base font-bold transition-colors shadow-lg shadow-brand/20">Sign Up</a>
                     </div>
                     @endauth
                 </div>
@@ -194,20 +194,20 @@
             <div class="px-4 py-4 space-y-3 flex flex-col">
                 <livewire:search />
                 
-                <a href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Home</a>
-                <a href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Tv Shows</a>
-                <a href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Movies</a>
-                <a href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Anime</a>
-                <a href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Community</a>
+                <a wire:navigate.hover href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Home</a>
+                <a wire:navigate.hover href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Tv Shows</a>
+                <a wire:navigate.hover href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Movies</a>
+                <a wire:navigate.hover href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Anime</a>
+                <a wire:navigate.hover href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Community</a>
                 
                 @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
-                <a href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Admin</a>
+                <a wire:navigate.hover href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Admin</a>
                 @endif
                 
                 @guest
                 <div class="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
-                    <a href="{{ url('login') }}" class="text-center text-gray-300 hover:text-white text-base font-medium transition-colors py-2">Login</a>
-                    <a href="{{ url('login?register=true') }}" class="text-center bg-brand hover:bg-cyan-400 text-white px-5 py-2 rounded-full text-base font-bold transition-colors">Sign Up</a>
+                    <a wire:navigate.hover href="{{ url('login') }}" class="text-center text-gray-300 hover:text-white text-base font-medium transition-colors py-2">Login</a>
+                    <a wire:navigate.hover href="{{ url('login?register=true') }}" class="text-center bg-brand hover:bg-cyan-400 text-white px-5 py-2 rounded-full text-base font-bold transition-colors">Sign Up</a>
                 </div>
                 @endguest
             </div>

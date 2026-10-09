@@ -3,7 +3,7 @@
         <h2 class="text-3xl font-bold text-white mb-8 border-l-4 border-brand pl-4">All Movies</h2>
         <div class="spotlight-group grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 relative z-20">
             @foreach ($topRated as $movie)
-            <a href="{{ route('watch', ['type' => 'movie', 'id' => $movie['id']]) }}" class="spotlight-card block relative cursor-pointer">
+            <a wire:navigate.hover href="{{ route('watch', ['type' => 'movie', 'id' => $movie['id']]) }}" class="spotlight-card block relative cursor-pointer">
                 <div x-data="{ loaded: false }" class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg ring-1 ring-white/5 transition-all duration-300">
                     <div x-show="!loaded" class="absolute inset-0 bg-gray-800 animate-pulse"></div>
                     <img style="view-transition-name: poster-movie-{{ $movie['id'] }}" x-init="$el.complete && (loaded = true)" @load="loaded = true" :class="loaded ? 'opacity-100' : 'opacity-0'" src="{{'https://image.tmdb.org/t/p/w500/'.$movie['poster_path']}}" alt="{{$movie['title']}}" class="w-full h-full object-cover transition-all duration-500" loading="lazy">

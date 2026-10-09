@@ -50,7 +50,7 @@
                         </p>
                         
                         <div class="flex items-center space-x-4">
-                            <a href="{{ route('watch', ['type' => 'movie', 'id' => $hero['id']]) }}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
+                            <a wire:navigate.hover href="{{ route('watch', ['type' => 'movie', 'id' => $hero['id']]) }}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
                                 <i class='bx bx-info-circle text-2xl mr-2'></i>
                                 Details
                             </a>

@@ -1,7 +1,7 @@
 <x-indexLay>
 <div class="container mx-auto px-4 py-8 max-w-6xl">
     <div class="mb-6 flex items-center text-sm text-gray-400 gap-2">
-        <a href="{{ route('forum.index') }}" class="hover:text-brand transition-colors flex items-center gap-1"><i class='bx bx-home'></i> Forums</a>
+        <a wire:navigate.hover href="{{ route('forum.index') }}" class="hover:text-brand transition-colors flex items-center gap-1"><i class='bx bx-home'></i> Forums</a>
         <i class='bx bx-chevron-right text-gray-600'></i>
         <span class="text-white">{{ $category->name }}</span>
     </div>
@@ -12,7 +12,7 @@
             <p class="text-gray-400">{{ $category->description }}</p>
         </div>
         @auth
-            <a href="{{ route('forum.create') }}?category={{ $category->id }}" class="bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2.5 px-6 rounded-full transition-colors shadow-lg shadow-brand/20 flex items-center gap-2 whitespace-nowrap">
+            <a wire:navigate.hover href="{{ route('forum.create') }}?category={{ $category->id }}" class="bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2.5 px-6 rounded-full transition-colors shadow-lg shadow-brand/20 flex items-center gap-2 whitespace-nowrap">
                 <i class='bx bx-plus text-lg'></i> New Thread
             </a>
         @endauth
@@ -28,16 +28,16 @@
         @forelse($threads as $thread)
             <div class="grid grid-cols-12 gap-4 p-4 items-center border-b border-gray-700/50 last:border-0 hover:bg-white/5 transition-colors group">
                 <div class="col-span-8 md:col-span-6 pl-2">
-                    <a href="{{ route('forum.thread', $thread->slug) }}" class="text-lg font-semibold text-white group-hover:text-brand transition-colors block mb-1">
+                    <a wire:navigate.hover href="{{ route('forum.thread', $thread->slug) }}" class="text-lg font-semibold text-white group-hover:text-brand transition-colors block mb-1">
                         {{ $thread->title }}
                     </a>
-                    <div class="text-xs text-gray-500 md:hidden mb-1">by <a href="{{ route('profile.show', $thread->user->username) }}" class="text-gray-400 hover:text-white">{{ $thread->user->username }}</a></div>
+                    <div class="text-xs text-gray-500 md:hidden mb-1">by <a wire:navigate.hover href="{{ route('profile.show', $thread->user->username) }}" class="text-gray-400 hover:text-white">{{ $thread->user->username }}</a></div>
                     <div class="text-xs text-gray-500 flex items-center gap-1">
                         <i class='bx bx-time-five'></i> {{ $thread->created_at->diffForHumans() }}
                     </div>
                 </div>
                 <div class="hidden md:flex col-span-3 items-center justify-center gap-3">
-                    <a href="{{ route('profile.show', $thread->user->username) }}" class="flex items-center gap-3 group/user">
+                    <a wire:navigate.hover href="{{ route('profile.show', $thread->user->username) }}" class="flex items-center gap-3 group/user">
                         @if($thread->user->avatar)
                             <img src="{{ asset('storage/' . $thread->user->avatar) }}" class="w-8 h-8 rounded-full border border-gray-600 object-cover group-hover/user:border-brand transition-colors">
                         @else
@@ -59,7 +59,7 @@
                 <h3 class="text-lg font-medium text-white mb-2">No threads yet</h3>
                 <p class="text-gray-400 mb-6 max-w-sm mx-auto">This category is empty. Be the first to start a discussion and get the conversation rolling!</p>
                 @auth
-                    <a href="{{ route('forum.create') }}?category={{ $category->id }}" class="inline-block bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-6 rounded-full transition-colors">
+                    <a wire:navigate.hover href="{{ route('forum.create') }}?category={{ $category->id }}" class="inline-block bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-6 rounded-full transition-colors">
                         Start a Thread
                     </a>
                 @endauth
