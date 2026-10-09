@@ -14,7 +14,7 @@
                 <ul class="py-2">
                     @foreach ($hasilcari as $item)
                         <li>
-                            <a href="{{ route('watch', ['type' => $item['media_type'] ?? 'movie', 'id' => $item['id']]) }}" class="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-700/30 last:border-0 group">
+                            <a wire:navigate.hover href="{{ route('watch', ['type' => $item['media_type'] ?? 'movie', 'id' => $item['id']]) }}" class="flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors border-b border-gray-700/30 last:border-0 group">
                                 @if (isset($item['poster_path']) && $item['poster_path'])
                                     <img style="view-transition-name: poster-{{ $item['media_type'] ?? 'movie' }}-{{ $item['id'] }}" src="https://image.tmdb.org/t/p/w92/{{$item['poster_path']}}" alt="{{ $item['title'] ?? $item['name'] }}" class="w-10 rounded shadow-sm group-hover:scale-105 transition-transform">
                                 @else

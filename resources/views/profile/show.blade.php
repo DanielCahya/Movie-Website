@@ -25,7 +25,7 @@
                     
                     @auth
                         @if(Auth::user()->id === $user->id)
-                            <a href="{{ route('profile.edit') }}" class="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-6 py-2.5 rounded-full font-medium transition-colors shadow-lg flex items-center gap-2">
+                            <a wire:navigate.hover href="{{ route('profile.edit') }}" class="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 px-6 py-2.5 rounded-full font-medium transition-colors shadow-lg flex items-center gap-2">
                                 <i class='bx bx-edit-alt'></i> Edit Profile
                             </a>
                         @else
@@ -75,7 +75,7 @@
                         </div>
                         <div class="flex-grow">
                             <div class="text-sm text-gray-400 mb-1">
-                                Commented on <a href="{{ route('watch', ['type' => $activity->media_type, 'id' => $activity->media_id]) }}" class="text-brand hover:underline font-semibold">{{ $activity->media_title ?? 'a ' . ucfirst($activity->media_type) }}</a>
+                                Commented on <a wire:navigate.hover href="{{ route('watch', ['type' => $activity->media_type, 'id' => $activity->media_id]) }}" class="text-brand hover:underline font-semibold">{{ $activity->media_title ?? 'a ' . ucfirst($activity->media_type) }}</a>
                                 <span class="mx-2">•</span>
                                 {{ $activity->created_at->diffForHumans() }}
                             </div>

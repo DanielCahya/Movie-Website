@@ -41,7 +41,7 @@
         <div class="w-10 h-10 rounded-full flex-none bg-brand-card flex items-center justify-center text-gray-600"><i class='bx bx-user'></i></div>
         <div class="flex-grow bg-white/5 border border-white/5 rounded-md p-4 text-gray-500 text-sm flex items-center justify-between">
             <span>Share your thoughts</span>
-            <a href="{{ route('login') }}" class="bg-brand hover:bg-cyan-400 text-gray-900 font-semibold py-1.5 px-6 rounded transition-colors shadow-lg">Log in</a>
+            <a wire:navigate.hover href="{{ route('login') }}" class="bg-brand hover:bg-cyan-400 text-gray-900 font-semibold py-1.5 px-6 rounded transition-colors shadow-lg">Log in</a>
         </div>
     </div>
     @endauth
@@ -50,7 +50,7 @@
     <div class="space-y-8">
         @forelse($comments as $comment)
             <div class="flex gap-4 group" x-data="{ editMode: false, openReply: false }">
-                <a href="{{ route('profile.show', $comment->user->username) }}" class="w-10 h-10 rounded-full flex-none overflow-hidden bg-brand-card mt-1 block">
+                <a wire:navigate.hover href="{{ route('profile.show', $comment->user->username) }}" class="w-10 h-10 rounded-full flex-none overflow-hidden bg-brand-card mt-1 block">
                     @if($comment->user->avatar)
                         <img src="{{ asset('storage/' . $comment->user->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
                     @else
@@ -61,7 +61,7 @@
                 </a>
                 <div class="flex-grow">
                     <div class="mb-1 flex items-center">
-                        <a href="{{ route('profile.show', $comment->user->username) }}" class="font-bold text-gray-200 text-sm hover:text-white transition-colors mr-2">{{ $comment->user->username }}</a>
+                        <a wire:navigate.hover href="{{ route('profile.show', $comment->user->username) }}" class="font-bold text-gray-200 text-sm hover:text-white transition-colors mr-2">{{ $comment->user->username }}</a>
                         @if($comment->user->role === 'admin' || $comment->user->role === 'superadmin')
                             <span class="text-brand text-[10px] font-bold mr-2">MOD</span>
                         @endif
@@ -152,10 +152,10 @@
                             </div>
                             @else
                             <div class="flex items-center gap-5">
-                                <a href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
+                                <a wire:navigate.hover href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
                                     <i class='bx bx-like'></i> {{ $comment->likes->where('is_dislike', false)->count() }}
                                 </a>
-                                <a href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
+                                <a wire:navigate.hover href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
                                     <i class='bx bx-dislike'></i> {{ $comment->likes->where('is_dislike', true)->count() }}
                                 </a>
                             </div>
@@ -192,7 +192,7 @@
                         @else
                         <div class="bg-white/5 border border-white/5 rounded-md p-3 text-gray-500 text-sm flex items-center justify-between">
                             <span>Log in to reply</span>
-                            <a href="{{ route('login') }}" class="bg-brand hover:bg-cyan-400 text-gray-900 font-semibold py-1 px-4 rounded transition-colors shadow-lg">Log in</a>
+                            <a wire:navigate.hover href="{{ route('login') }}" class="bg-brand hover:bg-cyan-400 text-gray-900 font-semibold py-1 px-4 rounded transition-colors shadow-lg">Log in</a>
                         </div>
                         @endauth
                     </div>
@@ -202,7 +202,7 @@
                         <div class="mt-5 space-y-5 pl-5 border-l border-white/5/50" x-data="{ visibleReplies: 5 }">
                             @foreach($comment->replies as $reply)
                                 <div class="flex gap-4 group" x-show="{{ $loop->index }} < visibleReplies" @if($loop->index >= 5) style="display: none;" @endif x-data="{ replyEditMode: false, openReply: false }">
-                                    <a href="{{ route('profile.show', $reply->user->username) }}" class="w-8 h-8 rounded-full flex-none overflow-hidden bg-brand-card block">
+                                    <a wire:navigate.hover href="{{ route('profile.show', $reply->user->username) }}" class="w-8 h-8 rounded-full flex-none overflow-hidden bg-brand-card block">
                                         @if($reply->user->avatar)
                                             <img src="{{ asset('storage/' . $reply->user->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
                                         @else
@@ -213,7 +213,7 @@
                                     </a>
                                     <div class="flex-grow">
                                         <div class="mb-1 flex items-center">
-                                            <a href="{{ route('profile.show', $reply->user->username) }}" class="font-bold text-gray-200 text-sm hover:text-white transition-colors mr-2">{{ $reply->user->username }}</a>
+                                            <a wire:navigate.hover href="{{ route('profile.show', $reply->user->username) }}" class="font-bold text-gray-200 text-sm hover:text-white transition-colors mr-2">{{ $reply->user->username }}</a>
                                             @if($reply->user->role === 'admin' || $reply->user->role === 'superadmin')
                                                 <span class="text-brand text-[10px] font-bold mr-2">MOD</span>
                                             @endif
@@ -326,10 +326,10 @@
                                         </div>
                                         @else
                                         <div class="flex items-center gap-5 mt-3 text-gray-500 text-xs font-semibold">
-                                            <a href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
+                                            <a wire:navigate.hover href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
                                                 <i class='bx bx-like'></i> {{ $reply->likes->where('is_dislike', false)->count() }}
                                             </a>
-                                            <a href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
+                                            <a wire:navigate.hover href="{{ route('login') }}" class="flex items-center gap-1.5 hover:text-gray-300 transition-colors">
                                                 <i class='bx bx-dislike'></i> {{ $reply->likes->where('is_dislike', true)->count() }}
                                             </a>
                                         </div>

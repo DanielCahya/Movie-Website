@@ -29,7 +29,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($followedUsers as $followed)
                         <div class="bg-brand-card rounded-xl p-4 flex items-center justify-between border border-white/5">
-                            <a href="{{ route('profile.show', $followed->username) }}" class="flex items-center gap-3">
+                            <a wire:navigate.hover href="{{ route('profile.show', $followed->username) }}" class="flex items-center gap-3">
                                 @if($followed->avatar)
                                     <img src="{{ asset('storage/' . $followed->avatar) }}" alt="{{ $followed->username }}" class="w-12 h-12 rounded-full object-cover">
                                 @else

@@ -1,9 +1,9 @@
 <x-indexLay>
 <div class="container mx-auto px-4 py-8 max-w-5xl">
     <div class="mb-6 flex flex-wrap items-center text-sm text-gray-400 gap-2">
-        <a href="{{ route('forum.index') }}" class="hover:text-brand transition-colors"><i class='bx bx-home'></i> Forums</a>
+        <a wire:navigate.hover href="{{ route('forum.index') }}" class="hover:text-brand transition-colors"><i class='bx bx-home'></i> Forums</a>
         <i class='bx bx-chevron-right text-gray-600'></i>
-        <a href="{{ route('forum.category', $thread->category->slug) }}" class="hover:text-brand transition-colors">{{ $thread->category->name }}</a>
+        <a wire:navigate.hover href="{{ route('forum.category', $thread->category->slug) }}" class="hover:text-brand transition-colors">{{ $thread->category->name }}</a>
         <i class='bx bx-chevron-right text-gray-600'></i>
         <span class="text-white opacity-80 truncate max-w-[200px] sm:max-w-xs">{{ $thread->title }}</span>
     </div>
@@ -22,7 +22,7 @@
         <div class="flex flex-col md:flex-row">
             <!-- User Info Sidebar -->
             <div class="w-full md:w-56 bg-gray-900/60 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-700/50">
-                <a href="{{ route('profile.show', $thread->user->username) }}" class="relative group block mb-4">
+                <a wire:navigate.hover href="{{ route('profile.show', $thread->user->username) }}" class="relative group block mb-4">
                     @if($thread->user->avatar)
                         <img src="{{ asset('storage/' . $thread->user->avatar) }}" class="w-24 h-24 rounded-full border-4 border-gray-800 group-hover:border-brand object-cover transition-colors shadow-xl">
                     @else
@@ -31,7 +31,7 @@
                     <!-- Online indicator dot (fake for design) -->
                     <div class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-brand-card rounded-full"></div>
                 </a>
-                <a href="{{ route('profile.show', $thread->user->username) }}" class="text-white font-bold text-lg hover:text-brand transition-colors text-center w-full truncate">{{ $thread->user->username }}</a>
+                <a wire:navigate.hover href="{{ route('profile.show', $thread->user->username) }}" class="text-white font-bold text-lg hover:text-brand transition-colors text-center w-full truncate">{{ $thread->user->username }}</a>
                 <div class="text-xs text-brand bg-brand/10 px-3 py-1 rounded-full mt-2 font-medium border border-brand/20">Topic Starter</div>
                 <div class="mt-4 w-full grid grid-cols-2 gap-2 text-center text-xs text-gray-500 border-t border-gray-800 pt-4">
                     <div>
@@ -73,14 +73,14 @@
                 <div class="flex flex-col md:flex-row">
                     <!-- User Info Sidebar -->
                     <div class="w-full md:w-56 bg-gray-900/30 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-700/50">
-                        <a href="{{ route('profile.show', $post->user->username) }}" class="group block mb-3">
+                        <a wire:navigate.hover href="{{ route('profile.show', $post->user->username) }}" class="group block mb-3">
                             @if($post->user->avatar)
                                 <img src="{{ asset('storage/' . $post->user->avatar) }}" class="w-16 h-16 rounded-full border-2 border-gray-700 group-hover:border-brand object-cover transition-colors">
                             @else
                                 <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center text-xl font-bold text-brand border-2 border-gray-700 group-hover:border-brand transition-colors">{{ substr($post->user->username, 0, 1) }}</div>
                             @endif
                         </a>
-                        <a href="{{ route('profile.show', $post->user->username) }}" class="text-gray-200 font-semibold hover:text-brand transition-colors text-center text-sm w-full truncate">{{ $post->user->username }}</a>
+                        <a wire:navigate.hover href="{{ route('profile.show', $post->user->username) }}" class="text-gray-200 font-semibold hover:text-brand transition-colors text-center text-sm w-full truncate">{{ $post->user->username }}</a>
                         @if($post->user->id === $thread->user_id)
                             <div class="text-[10px] text-brand bg-brand/10 px-2 py-0.5 rounded mt-1 font-medium border border-brand/20">Topic Starter</div>
                         @endif
@@ -132,7 +132,7 @@
             <div class="bg-gray-900/60 rounded-xl p-8 text-center border border-gray-700/50 backdrop-blur-sm relative z-10">
                 <i class='bx bx-lock-alt text-4xl text-gray-500 mb-3'></i>
                 <p class="text-gray-300 mb-5 font-medium">You must be logged in to participate in this discussion.</p>
-                <a href="{{ route('login') }}" class="inline-block bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-8 rounded-full transition-colors shadow-lg">Login to Reply</a>
+                <a wire:navigate.hover href="{{ route('login') }}" class="inline-block bg-brand hover:bg-teal-400 text-brand-dark font-bold py-2 px-8 rounded-full transition-colors shadow-lg">Login to Reply</a>
             </div>
         @endauth
     </div>

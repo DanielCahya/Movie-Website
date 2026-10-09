@@ -69,7 +69,7 @@
                     <i class='bx bx-bookmark text-6xl text-gray-700 mb-4'></i>
                     <h3 class="text-xl font-bold text-white mb-2">Your Watchlist is empty</h3>
                     <p class="text-gray-500 mb-6">Discover movies and TV shows and save them here for later.</p>
-                    <a href="{{ url('home') }}" class="inline-block bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg shadow-brand/20">
+                    <a wire:navigate.hover href="{{ url('home') }}" class="inline-block bg-brand hover:bg-cyan-400 text-gray-900 font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg shadow-brand/20">
                         Explore Now
                     </a>
                 </div>
