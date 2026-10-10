@@ -1,0 +1,50 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/html/movie-website
+          
+          # Stash any accidental local changes on the server just in case
+          sudo git stash
+          
+          # Pull latest code from Github
+          sudo git pull origin master
+          
+          # Update dependencies (if any changed)
+          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+          
+          # Run database migrations automatically
+          php artisan migrate --force
+          
+          # Clear and rebuild caches for maximum performance
+          php artisan optimize:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          
+          # Ensure Nginx retains permission over newly pulled files
+          sudo chown -R ubuntu:www-data /var/www/html/movie-website/storage
+          sudo chown -R ubuntu:www-data /var/www/html/movie-website/bootstrap/cache
+          sudo chmod -R 775 /var/www/html/movie-website/storage
+          sudo chmod -R 775 /var/www/html/movie-website/bootstrap/cache
+          
+          echo "Deployment Successful! 🚀"

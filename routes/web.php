@@ -58,6 +58,10 @@ Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/category/{slug}', [ForumController::class, 'category'])->name('forum.category');
 Route::get('/forum/thread/{slug}', [ForumController::class, 'thread'])->name('forum.thread');
 
+// SEO Sitemap
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
+
+
 // Consolidated Details Endpoint
 Route::get('/watch/{type}/{id}', [ShowController::class, 'watch'])->name('watch');
 
