@@ -44,7 +44,7 @@ jobs:
           # Ensure Nginx retains permission over newly pulled files
           sudo chown -R ubuntu:www-data /var/www/html/movie-website/storage
           sudo chown -R ubuntu:www-data /var/www/html/movie-website/bootstrap/cache
-          sudo chmod -R 775 /var/www/html/movie-website/storage
-          sudo chmod -R 775 /var/www/html/movie-website/bootstrap/cache
+          sudo chmod -R 777 /var/www/html/movie-website/storage
+          sudo chmod -R 777 /var/www/html/movie-website/bootstrap/cache
           
-          echo "Deployment Successful! 🚀"
+          echo "Deployment Successful!"

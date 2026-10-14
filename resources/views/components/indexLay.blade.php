@@ -73,6 +73,85 @@
             margin-bottom: -3rem !important;
             clip-path: inset(-3rem -3rem -3rem -3rem);
         }
+
+        /* ── Navbar Active Spotlight ── */
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: rgba(209,213,219,1);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: color 0.2s ease;
+        }
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0.5rem;
+            background: rgba(6, 182, 212, 0);
+            transition: background 0.25s ease;
+            pointer-events: none;
+        }
+        /* Glowing underline bar */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 70%;
+            height: 2px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+            box-shadow: 0 0 8px 2px rgba(6,182,212,0.6);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .nav-link:hover {
+            color: #ffffff;
+        }
+        .nav-link:hover::before {
+            background: rgba(6, 182, 212, 0.08);
+        }
+        .nav-link:hover::after {
+            transform: translateX(-50%) scaleX(1);
+        }
+        /* Active state */
+        .nav-link.active {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+        .nav-link.active::before {
+            background: rgba(6, 182, 212, 0.13);
+            box-shadow: 0 0 18px 4px rgba(6,182,212,0.13);
+        }
+        .nav-link.active::after {
+            transform: translateX(-50%) scaleX(1);
+            background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+            box-shadow: 0 0 12px 3px rgba(6,182,212,0.75);
+        }
+        /* Mobile active state */
+        .nav-link-mobile {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            color: rgba(209,213,219,1);
+            transition: color 0.2s, background 0.2s;
+        }
+        .nav-link-mobile:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+        .nav-link-mobile.active {
+            color: #06b6d4 !important;
+            background: rgba(6,182,212,0.10) !important;
+            font-weight: 600;
+            border-left: 3px solid #06b6d4;
+            padding-left: calc(0.75rem - 3px);
+        }
     </style>
     <title>@yield('title', 'Galiwe')</title>
     <meta name="description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
@@ -116,14 +195,14 @@
                 </div>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex flex-grow justify-center space-x-8">
-                    <a wire:navigate.hover href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Home</a>
-                    <a wire:navigate.hover href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Tv Shows</a>
-                    <a wire:navigate.hover href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Movies</a>
-                    <a wire:navigate.hover href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium">Anime</a>
-                    <a wire:navigate.hover href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Community</a>
+                <div class="hidden md:flex flex-grow justify-center space-x-2">
+                    <a wire:navigate.hover href="{{ url('home') }}" class="nav-link {{ request()->is('home') || request()->is('/') ? 'active' : '' }}">Home</a>
+                    <a wire:navigate.hover href="{{ url('tvshow') }}" class="nav-link {{ request()->is('tvshow') ? 'active' : '' }}">TV Shows</a>
+                    <a wire:navigate.hover href="{{ url('movieList') }}" class="nav-link {{ request()->is('movieList') ? 'active' : '' }}">Movies</a>
+                    <a wire:navigate.hover href="{{ url('animation') }}" class="nav-link {{ request()->is('animation') ? 'active' : '' }}">Anime</a>
+                    <a wire:navigate.hover href="{{ route('forum.index') }}" class="nav-link {{ request()->is('forum*') ? 'active' : '' }}">Community</a>
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
-                    <a wire:navigate.hover href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium transition-colors">Admin</a>
+                    <a wire:navigate.hover href="{{ url('admin') }}" class="nav-link {{ request()->is('admin*') ? 'active' : '' }}">Admin</a>
                     @endif
                 </div>
                 
@@ -191,18 +270,18 @@
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="md:hidden absolute top-16 left-0 w-full bg-brand-card border-b border-white/10 shadow-2xl z-40"
              style="display: none;">
-            <div class="px-4 py-4 space-y-3 flex flex-col">
+            <div class="px-4 py-4 space-y-1 flex flex-col">
                 <livewire:search />
-                
-                <a wire:navigate.hover href="{{ url('home') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Home</a>
-                <a wire:navigate.hover href="{{ url('tvshow') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Tv Shows</a>
-                <a wire:navigate.hover href="{{ url('movieList') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Movies</a>
-                <a wire:navigate.hover href="{{ url('animation') }}" class="text-brand px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Anime</a>
-                <a wire:navigate.hover href="{{ route('forum.index') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Community</a>
-                
-                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
-                <a wire:navigate.hover href="{{ url('admin') }}" class="text-gray-300 hover:text-white px-3 py-2 text-base font-medium rounded-md hover:bg-white/5 transition-colors">Admin</a>
-                @endif
+                <div class="pt-2 space-y-1">
+                    <a wire:navigate.hover href="{{ url('home') }}" class="nav-link-mobile {{ request()->is('home') || request()->is('/') ? 'active' : '' }}">Home</a>
+                    <a wire:navigate.hover href="{{ url('tvshow') }}" class="nav-link-mobile {{ request()->is('tvshow') ? 'active' : '' }}">TV Shows</a>
+                    <a wire:navigate.hover href="{{ url('movieList') }}" class="nav-link-mobile {{ request()->is('movieList') ? 'active' : '' }}">Movies</a>
+                    <a wire:navigate.hover href="{{ url('animation') }}" class="nav-link-mobile {{ request()->is('animation') ? 'active' : '' }}">Anime</a>
+                    <a wire:navigate.hover href="{{ route('forum.index') }}" class="nav-link-mobile {{ request()->is('forum*') ? 'active' : '' }}">Community</a>
+                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'superadmin']))
+                    <a wire:navigate.hover href="{{ url('admin') }}" class="nav-link-mobile {{ request()->is('admin*') ? 'active' : '' }}">Admin</a>
+                    @endif
+                </div>
                 
                 @guest
                 <div class="pt-4 mt-2 border-t border-white/10 flex flex-col gap-3">
