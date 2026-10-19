@@ -28,7 +28,14 @@ class ForumController extends Controller
     public function thread($slug)
     {
         $thread = Thread::where('slug', $slug)->with(['user', 'category', 'posts.user'])->firstOrFail();
-        $thread->increment('views'); // Increase view count
+
+        // Increment views only once per session to prevent spam from refreshes and crawlers
+        $sessionKey = 'viewed_thread_' . $thread->id;
+        if (!session()->has($sessionKey)) {
+            $thread->increment('views');
+            session()->put($sessionKey, now()->timestamp);
+        }
+
         return view('forum.thread', compact('thread'));
     }
 
@@ -43,7 +50,7 @@ class ForumController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'content' => 'required|string',
+            'content' => 'required|string|min:5|max:10000',
         ]);
 
         $slug = Str::slug($request->title) . '-' . uniqid();
@@ -59,10 +66,18 @@ class ForumController extends Controller
         return redirect()->route('forum.thread', $thread->slug)->with('success', 'Thread created successfully!');
     }
 
+    public function destroyThread(Thread $thread)
+    {
+        $this->authorize('delete', $thread);
+        $thread->delete();
+
+        return redirect()->route('forum.index')->with('success', 'Thread deleted successfully.');
+    }
+
     public function storePost(Request $request, $thread_id)
     {
         $request->validate([
-            'content' => 'required|string',
+            'content' => 'required|string|min:2|max:5000',
         ]);
 
         $thread = Thread::findOrFail($thread_id);
@@ -77,5 +92,13 @@ class ForumController extends Controller
         $thread->touch();
 
         return back()->with('success', 'Reply posted successfully!');
+    }
+
+    public function destroyPost(Post $post)
+    {
+        $this->authorize('delete', $post);
+        $post->delete();
+
+        return back()->with('success', 'Reply deleted successfully.');
     }
 }

@@ -76,30 +76,36 @@
     <!-- REUSABLE GRID CAROUSEL COMPONENT -->
     @php
         // Helper to render the movie card
-        $renderCard = function($item, $type = 'movie', $genreMap) {
-            $id = $item['id'];
-            $title = $item['title'] ?? $item['name'];
-            $poster = $item['poster_path'];
-            $url = route('watch', ['type' => $type, 'id' => $id]);
-            $year = isset($item['release_date']) ? \Carbon\Carbon::parse($item['release_date'])->format('Y') : 
+        $renderCard = function($item, $type = 'movie', $genreMap = null) {
+            $id = (int) ($item['id'] ?? 0);
+            $rawTitle = (string) ($item['title'] ?? $item['name'] ?? 'Untitled');
+            $safeTitle = htmlspecialchars($rawTitle, ENT_QUOTES, 'UTF-8');
+            $rawPoster = (string) ($item['poster_path'] ?? '');
+            $safePoster = htmlspecialchars(ltrim($rawPoster, '/'), ENT_QUOTES, 'UTF-8');
+            $safeType = htmlspecialchars($type, ENT_QUOTES, 'UTF-8');
+            $url = htmlspecialchars(route('watch', ['type' => $type, 'id' => $id]), ENT_QUOTES, 'UTF-8');
+            $rawYear = isset($item['release_date']) ? \Carbon\Carbon::parse($item['release_date'])->format('Y') : 
                     (isset($item['first_air_date']) ? \Carbon\Carbon::parse($item['first_air_date'])->format('Y') : '');
+            $safeYear = htmlspecialchars($rawYear, ENT_QUOTES, 'UTF-8');
+            $safeRating = htmlspecialchars((string) ($item['vote_average'] ?? '0'), ENT_QUOTES, 'UTF-8');
+            $imgSrc = $safePoster ? 'https://image.tmdb.org/t/p/w500/' . $safePoster : 'https://via.placeholder.com/500x750?text=No+Poster';
             
             return '
-                <a href="'.$url.'" onclick="this.querySelector(\'img\').style.viewTransitionName = \'poster-'.$type.'-'.$id.'\'" class="movie-card flex-none w-36 md:w-48 xl:w-56 cursor-pointer snap-start opacity-0 transition-all duration-300 hover:scale-[1.08] hover:-translate-y-2 group">
+                <a href="'.$url.'" onclick="this.querySelector(\'img\').style.viewTransitionName = \'poster-'.$safeType.'-'.$id.'\'" class="movie-card flex-none w-36 md:w-48 xl:w-56 cursor-pointer snap-start opacity-0 transition-all duration-300 hover:scale-[1.08] hover:-translate-y-2 group">
                     <div x-data="{ loaded: false }" class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg ring-1 ring-white/5 group-hover:ring-brand/80 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-300">
                         <!-- Skeleton Loader -->
                         <div x-show="!loaded" class="absolute inset-0 bg-gray-800 animate-pulse"></div>
                         
-                        <img x-init="$el.complete && (loaded = true)" @load="loaded = true" :class="loaded ? \'opacity-100\' : \'opacity-0\'" src="https://image.tmdb.org/t/p/w500/'.$poster.'" alt="'.htmlspecialchars($title).'" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110" loading="lazy">
+                        <img x-init="$el.complete && (loaded = true)" @load="loaded = true" :class="loaded ? \'opacity-100\' : \'opacity-0\'" src="'.$imgSrc.'" alt="'.$safeTitle.'" class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110" loading="lazy">
                         <!-- Play Overlay -->
                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                             <i class="bx bx-play-circle text-5xl text-brand drop-shadow-md"></i>
                         </div>
                     </div>
-                    <h3 class="text-white font-semibold text-sm md:text-base truncate" title="'.htmlspecialchars($title).'">'.htmlspecialchars($title).'</h3>
+                    <h3 class="text-white font-semibold text-sm md:text-base truncate" title="'.$safeTitle.'">'.$safeTitle.'</h3>
                     <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
-                        <span>'.$year.'</span>
-                        <div class="flex items-center text-yellow-500"><i class="bx bxs-star mr-1"></i>'.$item['vote_average'].'</div>
+                        <span>'.$safeYear.'</span>
+                        <div class="flex items-center text-yellow-500"><i class="bx bxs-star mr-1"></i>'.$safeRating.'</div>
                     </div>
                 </a>
             ';

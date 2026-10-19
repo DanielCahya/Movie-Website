@@ -1,4 +1,13 @@
 User-agent: *
+Disallow: /admin
+Disallow: /login
+Disallow: /registerproses
+Disallow: /list
+Disallow: /edit/
+Disallow: /updated-data/
+Disallow: /delete-user/
+Disallow: /profile/edit
+Disallow: /profile/blocked
 Allow: /
 
 Sitemap: /sitemap.xml

@@ -1,4 +1,4 @@
-# Galiwe 🎬
+# MovieWebsite (Galiwe) 🎬
 
 A modern, responsive Laravel-based web application for discovering movies, TV shows, and anime. Powered by the TMDB API and optimized with Redis caching.
 
@@ -7,193 +7,127 @@ A modern, responsive Laravel-based web application for discovering movies, TV sh
 - **TMDB API Integration**: Real-time data for popular, top-rated, and currently airing movies and TV shows.
 - **Dedicated Anime Section**: Specialized filtering for animated content.
 - **Fast Caching**: Utilizes Redis for high-performance API response caching.
-- **Dynamic Search**: Real-time search powered by Laravel Livewire.
-- **Admin Dashboard**: Manage users and application settings.
+- **Dynamic Search**: Real-time instant search powered by Laravel Livewire (`Search` component).
+- **Admin Dashboard**: Manage users and roles with granular policies and authorization gates.
+- **Community Forum & Comments**: Discussions, nested comments, and like/dislike reactions.
 
 ## Tech Stack
 
-- **Backend**: Laravel, PHP 8.1+
-- **Frontend**: Tailwind CSS, Laravel Livewire
+- **Backend**: Laravel 9, PHP 8.2+
+- **Frontend**: Tailwind CSS, Alpine.js, Laravel Livewire
 - **Database**: MySQL
-- **Caching**: Redis
+- **Caching**: Redis (predis)
 - **APIs**: The Movie Database (TMDB) API
 
 ## Prerequisites
 
 Before setting up the project, ensure the following tools are installed on your system:
 
-- **PHP** (version 8.1 or higher) with `fileinfo` and `curl` extensions enabled
+- **PHP** (version 8.2 or higher) with `fileinfo`, `pdo_mysql`, `curl`, and `mbstring` extensions enabled
 - **Composer**
 - **Node.js** and **npm**
 - **MySQL** or any supported database
 - **Git**
-- TMDB API token
+- **TMDB API Read Access Token** (Bearer token)
+
 ---
 
 ## Installation
 
-Follow these steps to set up the project on your local machine:
+Follow these steps to set up the project on your machine:
 
 ### Step 1: Clone the Repository
 
 ```bash
-# Clone the repository
 git clone <repository-url>
-
-# Navigate to the project directory
 cd MovieWebsite
 ```
 
 ---
 
-### Step 2: Install PHP Dependencies
-
-Ensure Composer is installed, then run:
+### Step 2: Install PHP & JS Dependencies
 
 ```bash
 composer install
-```
-
----
-
-### Step 3: Install JavaScript Dependencies
-
-Ensure npm (or Yarn) is installed, then run:
-
-```bash
 npm install
 ```
 
 ---
 
-### Step 4: Configure the `.env` File
+### Step 3: Configure the `.env` File
 
 - Copy the example environment file:
   ```bash
   cp .env.example .env
   ```
-- Open the `.env` file and update the following settings:
-  - `DB_CONNECTION` (e.g., `mysql`)
-  - `DB_HOST` (e.g., `127.0.0.1` or your database server)
-  - `DB_PORT` (default: `3306`)
-  - `DB_DATABASE` (your database name)
-  - `DB_USERNAME` (your database username)
-  - `DB_PASSWORD` (your database password)
-  - `TMDB_TOKEN` (your-tmdb-token)
+- Generate an application key:
+  ```bash
+  php artisan key:generate
+  ```
+- Open `.env` and set:
+  - `DB_DATABASE=galiwe`
+  - `DB_USERNAME=your_db_username`
+  - `DB_PASSWORD=your_db_password`
+  - `TMDB_TOKEN=your_tmdb_bearer_token`
   - `CACHE_DRIVER=redis`
   - `REDIS_CLIENT=predis`
 
 ---
 
-### Step 5: Generate the Application Key
+### Step 4: Run Migrations & Storage Link
 
-Run the following command to generate a unique application key:
-
-```bash
-php artisan key:generate
-```
-
----
-
-### Step 6: Set up Database
-
-Ensure your database is running and properly configured in `.env`. You can either run the migrations:
-
+Run the standard Laravel migrations:
 ```bash
 php artisan migrate
+php artisan storage:link
 ```
 
-Alternatively, you can import the provided `galiwe.sql` dump file directly into your database using your preferred database manager (e.g. phpMyAdmin, Laragon) if you want the sample users and data pre-populated.
+> [!CAUTION]
+> **Production Notice:** Do **NOT** import `galiwe.sql` into a production database. `galiwe.sql` contains sample development users with pre-seeded test accounts. Always run `php artisan migrate` on production.
 
 ---
 
-### Step 7: Build Frontend Assets
-
-This project uses Laravel Mix to compile Tailwind CSS and Javascript assets. You must compile the assets to generate the final CSS:
+### Step 5: Build Frontend Assets
 
 ```bash
-# For development mode
+# For development
 npm run dev
 
-# For production mode
+# For production
 npm run prod
 ```
 
 ---
 
-### Step 8: Run the Application
-
-For local development, use the built-in Laravel server:
+### Step 6: Run the Application
 
 ```bash
 php artisan serve
 ```
 
-By default, the application will be available at `http://127.0.0.1:8000`.
+Default URL: `http://127.0.0.1:8000`.
 
 ---
 
-## Deployment
+## Production Deployment Checklist
 
-To deploy the application, ensure the following:
-
-1. Configure a web server (e.g., Apache or Nginx).
-2. Use environment-specific settings in the `.env` file.
-3. Set proper file permissions:
+1. Set `APP_ENV=production` and `APP_DEBUG=false` in `.env`.
+2. Ensure `APP_URL=https://yourdomain.com` and `SESSION_SECURE_COOKIE=true`.
+3. Run storage symlink: `php artisan storage:link`.
+4. Cache configuration, routes, and views:
    ```bash
-   chmod -R 775 storage bootstrap/cache
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
    ```
-4. Optimize the application for production:
+5. Run migrations:
    ```bash
-   php artisan optimize
+   php artisan migrate --force
    ```
+6. Set log rotation and level: `LOG_LEVEL=warning`.
 
 ---
 
-## Common Issues
+## Legal & TMDB Attribution
 
-### Missing Dependencies
-
-If the `vendor` or `node_modules` folders are missing, ensure you run:
-
-- `composer install` for PHP dependencies.
-- `npm install` for JavaScript dependencies.
-
-### Permissions Issues
-
-Ensure the `storage` and `bootstrap/cache` directories are writable:
-
-```bash
-chmod -R 775 storage bootstrap/cache
-```
-
-### Database Connection Errors
-
-Double-check the database configuration in your `.env` file and ensure the database service is running.
-
-### cURL error 60: SSL certificate problem
-
-If you are developing on Windows and see an SSL certificate error when the app tries to connect to the TMDB API:
-1. Download `cacert.pem` from [curl.se](https://curl.se/ca/cacert.pem).
-2. Save it to your PHP installation directory (e.g., `C:\php\cacert.pem`).
-3. Open your `php.ini` file, find `;curl.cainfo =` and change it to `curl.cainfo = "C:\php\cacert.pem"`.
-4. Restart your web server (Laragon/XAMPP).
-
-### Redis class not found
-
-If you see a "Class 'Redis' not found" error, make sure your `.env` is configured to use the `predis` client (since native PHP Redis extensions can be difficult to install on Windows):
-```env
-CACHE_DRIVER=redis
-REDIS_CLIENT=predis
-```
-And ensure you have run `composer install` to download the `predis/predis` package.
-
----
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Contributors
-
-- **Daniel Cahya Kurniawan**
+This product uses the TMDB API but is not endorsed or certified by TMDB. All movie and TV show data, posters, and backdrops are provided courtesy of [The Movie Database](https://www.themoviedb.org/).

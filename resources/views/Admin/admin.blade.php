@@ -46,9 +46,12 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                    @can('update', $row)
                                     <a wire:navigate.hover href="{{ route('edit', ['id' => $row->id]) }}" class="text-gray-400 hover:text-brand transition-colors p-2 bg-gray-800 rounded-lg hover:bg-gray-700 border border-gray-700 hover:border-brand/50 shadow-sm" title="Edit User">
                                         <i class="bx bx-edit-alt text-lg"></i>
                                     </a>
+                                    @endcan
+                                    @can('delete', $row)
                                     <form action="{{ route('delete-user', ['id' => $row->id]) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this user?');">
                                         @csrf
                                         @method('DELETE')
@@ -56,6 +59,7 @@
                                             <i class="bx bx-trash text-lg"></i>
                                         </button>
                                     </form>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

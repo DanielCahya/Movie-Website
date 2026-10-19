@@ -4,8 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Http\Response;
 
 
 class multiAkses
@@ -15,17 +13,22 @@ class multiAkses
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     * @param  string  ...$roles  Roles that are permitted to pass
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse|never
      */
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
         $userRole = auth()->user()->role;
 
-        // Check if the user's role matches the specified role or is "superadmin"
-        if ($userRole == $role || $userRole == 'superadmin') {
+        // Check if the user's role matches any of the specified roles or is "superadmin"
+        if (in_array($userRole, $roles, true) || $userRole === 'superadmin') {
             return $next($request);
         }
 
-        return redirect('user');
+        abort(403, 'Unauthorized access.');
     }
 }
