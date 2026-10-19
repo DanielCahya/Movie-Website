@@ -6,121 +6,163 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class LoginController extends Controller
 {
-    function index(){
+    public function index()
+    {
         return view('login');
     }
-    function login(Request $request){
+
+    public function login(Request $request)
+    {
         $request->validate([
-            'username'=>'required',
-            'password'=>'required'
-        ],[
-            'username.required' => 'Username wajib diisi',
-            'password.required' => 'Password wajib diisi',
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ], [
+            'username.required' => 'Username is required.',
+            'password.required' => 'Password is required.',
         ]);
 
-        $infologin=[
-            'username' => $request->username,
-            'password' => $request->password,
+        $infologin = [
+            'username' => $request->input('username'),
+            'password' => $request->input('password'),
         ];
 
         if (Auth::attempt($infologin)) {
-            if (Auth::user()->role == 'admin') {
-                return redirect('/admin');
-            }elseif (Auth::user()->role == 'superadmin') {
-                return redirect('/admin');
-            }else {
-                return redirect('/home');
+            $request->session()->regenerate();
+            if (in_array(Auth::user()->role, ['admin', 'superadmin'], true)) {
+                return redirect()->intended('/admin');
             }
-        }else{
-            return redirect('/login')->withErrors('Username atau password tidak sesuai')->withInput();
+            return redirect()->intended('/home');
         }
+
+        return redirect('/login')
+            ->withErrors(['username' => 'Invalid username or password.'])
+            ->withInput($request->only('username'));
     }
 
-    function logout(){
+    public function logout(Request $request)
+    {
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect('/');
     }
 
+    public function data()
+    {
+        $this->authorize('viewAny', User::class);
 
-
-    function data(){
         $userRole = Auth::user()->role;
         switch ($userRole) {
             case 'superadmin':
-                $data = User::get();
+                $data = User::latest()->get();
                 break;
 
             case 'admin':
-                $data = User::where('role', 'user')->get();
+                $data = User::where('role', 'user')->latest()->get();
                 break;
-            }
-        return view('Admin.admin',[
-            'data' => $data,
-        ]);
-    }
-    function edit($id){
-        $data = User::where('id','=',$id)->first();
-        return view('Admin.edit',[
-            'data' => $data,
-        ]);
-    }
 
-    function updated(Request $request, $id)
-    {
-        $request->validate([
-            'email' => 'required|email|unique:users,email,' . $id,
-            'username' => 'required',
-        ]);
-
-        $user = User::find($id);
-
-        if (!$user) {
-            return redirect()->back()->with('error', 'User not found');
+            default:
+                abort(403, 'Unauthorized access.');
         }
+
+        return view('Admin.admin', [
+            'data' => $data,
+        ]);
+    }
+
+    public function edit($id)
+    {
+        $data = User::findOrFail($id);
+        $this->authorize('update', $data);
+
+        return view('Admin.edit', [
+            'data' => $data,
+        ]);
+    }
+
+    public function updated(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $this->authorize('update', $user);
+
+        $request->validate([
+            'email' => 'required|email|max:255|unique:users,email,' . (int) $user->id,
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'regex:/^[a-zA-Z0-9_.-]+$/',
+                'unique:users,username,' . (int) $user->id,
+                Rule::notIn(['edit', 'watchlist', 'following', 'blocked', 'admin', 'login', 'logout', 'register', 'home', 'user', 'forum', 'watch', 'sitemap', 'privacy', 'terms']),
+            ],
+        ], [
+            'username.required' => 'Username is required.',
+            'username.unique' => 'This username is already taken.',
+            'username.regex' => 'Username may only contain letters, numbers, dashes, underscores, and periods.',
+            'username.not_in' => 'This username is reserved and cannot be used.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+        ]);
 
         $user->update([
             'email' => $request->input('email'),
             'username' => $request->input('username'),
         ]);
 
-        return redirect()->route('admin')->with('success', 'User information updated successfully');
+        return redirect()->route('admin')->with('success', 'User information updated successfully.');
     }
-    
-    function deleteUser($id)
-    {
-        $user = User::find($id);
 
-        if (!$user) {
-            return redirect()->back()->with('error', 'User not found');
-        }
+    public function deleteUser($id)
+    {
+        $user = User::findOrFail($id);
+        $this->authorize('delete', $user);
 
         $user->delete();
 
-        return redirect()->back()->with('success', 'User deleted successfully');
+        return redirect()->back()->with('success', 'User deleted successfully.');
     }
-    
-    function create(Request $request){
+
+    public function create(Request $request)
+    {
         $request->validate([
-            'email'=>'required|email|unique:users',
-            'username'=>'required',
-            'password'=>'required|min:6'
-        ],[
-            'email.email' => 'Tidak valid',
-            'email.unique'=> 'Email sudah pernah diissi',
-            'email.required' => 'Email wajib diisi',
-            'username.required' => 'Username wajib diisi',
-            'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password Min 6 karakter',
+            'email' => 'required|email|max:255|unique:users,email',
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'regex:/^[a-zA-Z0-9_.-]+$/',
+                'unique:users,username',
+                Rule::notIn(['edit', 'watchlist', 'following', 'blocked', 'admin', 'login', 'logout', 'register', 'home', 'user', 'forum', 'watch', 'sitemap', 'privacy', 'terms']),
+            ],
+            'password' => ['required', 'string', Password::min(8)],
+        ], [
+            'username.required' => 'Username is required.',
+            'username.unique' => 'This username is already taken.',
+            'username.regex' => 'Username may only contain letters, numbers, dashes, underscores, and periods.',
+            'username.not_in' => 'This username is reserved and cannot be used.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
-        User::create([
-            'email' => request('email'),
-            'username' => request('username'),
-            'password' => Hash::make(request('password'))
+        $user = new User([
+            'email' => $request->input('email'),
+            'username' => $request->input('username'),
+            'password' => Hash::make($request->input('password')),
         ]);
+        $user->role = 'user';
+        $user->save();
+
         return redirect('/login')->with('success', 'Registration successful! Please login.');
     }
 }

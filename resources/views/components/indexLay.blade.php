@@ -244,9 +244,12 @@
                             <a wire:navigate.hover href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors border-b border-gray-700/50">
                                 <i class='bx bx-cog text-lg text-brand'></i> Settings
                             </a>
-                            <a wire:navigate.hover href="{{ url('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
-                                <i class='bx bx-log-out text-lg'></i> Sign Out
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left">
+                                    <i class='bx bx-log-out text-lg'></i> Sign Out
+                                </button>
+                            </form>
                         </div>
                     </div>
                     @else
@@ -297,6 +300,36 @@
     <main class="flex-grow pt-16">
         {{ $slot }}
     </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-gray-800 bg-brand-bg/95 backdrop-blur-md text-gray-400 py-10 relative z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <!-- Branding & Legal Links -->
+                <div class="flex flex-col items-center md:items-start text-center md:text-left space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl font-black tracking-wider text-white">GALI<span class="text-brand">WE</span></span>
+                    </div>
+                    <p class="text-xs text-gray-500">© {{ date('Y') }} MovieWebsite. All rights reserved.</p>
+                    <div class="flex items-center space-x-4 text-xs pt-1">
+                        <a href="{{ route('privacy') }}" class="hover:text-brand transition-colors">Privacy Policy</a>
+                        <span>•</span>
+                        <a href="{{ route('terms') }}" class="hover:text-brand transition-colors">Terms of Service</a>
+                        <span>•</span>
+                        <a href="{{ url('sitemap.xml') }}" class="hover:text-brand transition-colors">Sitemap</a>
+                    </div>
+                </div>
+
+                <!-- TMDB Attribution -->
+                <div class="flex items-center space-x-4 bg-brand-card/60 border border-gray-800 rounded-xl p-4 max-w-md">
+                    <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB Logo" class="h-8 w-auto flex-none">
+                    <p class="text-[11px] text-gray-400 leading-tight">
+                        This product uses the TMDB API but is not endorsed or certified by TMDB.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <livewire:scripts />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
