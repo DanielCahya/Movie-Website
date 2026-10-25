@@ -1,3 +1,10 @@
+@props([
+    'title' => null,
+    'metaDescription' => null,
+    'ogImage' => null,
+    'ogType' => null,
+    'schema' => null,
+])
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -153,23 +160,36 @@
             padding-left: calc(0.75rem - 3px);
         }
     </style>
-    <title>@yield('title', 'Galiwe')</title>
-    <meta name="description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
+    @php
+        $pageTitle = $title ?? (trim($__env->yieldContent('title')) ?: 'Galiwe');
+        $pageDesc = $metaDescription ?? (trim($__env->yieldContent('meta_description')) ?: 'Discover and track the best movies and TV shows on Galiwe.');
+        $pageOgImage = $ogImage ?? (trim($__env->yieldContent('og_image')) ?: asset('default-og.jpg'));
+        $pageOgType = $ogType ?? (trim($__env->yieldContent('og_type')) ?: 'website');
+    @endphp
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDesc }}">
     <meta name="view-transition" content="same-origin" />
     
     <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:type" content="{{ $pageOgType }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('title', 'Galiwe')">
-    <meta property="og:description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
-    <meta property="og:image" content="@yield('og_image', asset('default-og.jpg'))">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDesc }}">
+    <meta property="og:image" content="{{ $pageOgImage }}">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ url()->current() }}">
-    <meta property="twitter:title" content="@yield('title', 'Galiwe')">
-    <meta property="twitter:description" content="@yield('meta_description', 'Discover and track the best movies and TV shows on Galiwe.')">
-    <meta property="twitter:image" content="@yield('og_image', asset('default-og.jpg'))">
+    <meta property="twitter:title" content="{{ $pageTitle }}">
+    <meta property="twitter:description" content="{{ $pageDesc }}">
+    <meta property="twitter:image" content="{{ $pageOgImage }}">
+
+    <!-- Schema.org Structured Data -->
+    @if(isset($schema))
+        {!! $schema !!}
+    @else
+        @yield('schema')
+    @endif
 </head>
 <body class="bg-brand-bg text-white font-sans antialiased min-h-screen flex flex-col">
 

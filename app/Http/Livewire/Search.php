@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 
-
 class Search extends Component
 {
     public $search = '';
@@ -43,23 +42,22 @@ class Search extends Component
                     return in_array($item['media_type'] ?? '', ['movie', 'tv']);
                 })->values()->take(10)->toArray();
 
-                // 3. Save these new results into our local MySQL database in ONE fast query!
-                $upsertData = [];
+                // 3. Save these new results into our local database without overwriting existing full records
+                $insertData = [];
+                $now = now();
                 foreach ($hasilcari as $item) {
-                    $upsertData[] = [
+                    $insertData[] = [
                         'tmdb_id' => $item['id'],
                         'media_type' => $item['media_type'],
                         'title' => $item['title'] ?? $item['name'] ?? 'Unknown',
                         'poster_path' => $item['poster_path'] ?? null,
                         'data' => json_encode($item),
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
                 }
-                if (count($upsertData) > 0) {
-                    \App\Models\Media::upsert(
-                        $upsertData,
-                        ['tmdb_id', 'media_type'], // Unique columns
-                        ['title', 'poster_path', 'data'] // Columns to update on duplicate
-                    );
+                if (count($insertData) > 0) {
+                    \App\Models\Media::insertOrIgnore($insertData);
                 }
             }
         }
