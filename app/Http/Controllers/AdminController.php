@@ -39,6 +39,38 @@ class AdminController extends Controller
     }
 
     /**
+     * Store retrieved items into local Media catalog to reduce future TMDB API reliance.
+     */
+    private function syncLocalMedia(array $items, string $defaultType = 'movie'): void
+    {
+        if (empty($items)) {
+            return;
+        }
+
+        $now = now();
+        $insertData = [];
+        foreach ($items as $item) {
+            if (!is_array($item) || !isset($item['id'])) {
+                continue;
+            }
+            $mediaType = $item['media_type'] ?? $defaultType;
+            $insertData[] = [
+                'tmdb_id' => $item['id'],
+                'media_type' => $mediaType,
+                'title' => $item['title'] ?? $item['name'] ?? 'Unknown',
+                'poster_path' => $item['poster_path'] ?? null,
+                'data' => json_encode($item),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (count($insertData) > 0) {
+            \App\Models\Media::insertOrIgnore($insertData);
+        }
+    }
+
+    /**
      * Fetch from TMDB and cache only on successful response.
      */
     private function rememberTmdb(string $cacheKey, string $endpoint, array $query = [], string $resultsKey = 'results', int $ttlHours = 4): array
@@ -51,6 +83,10 @@ class AdminController extends Controller
 
         if ($data !== null) {
             Cache::put($cacheKey, $data, now()->addHours($ttlHours));
+            if ($resultsKey === 'results') {
+                $inferredType = str_contains($endpoint, '/tv') ? 'tv' : 'movie';
+                $this->syncLocalMedia($data, $inferredType);
+            }
             return $data;
         }
 

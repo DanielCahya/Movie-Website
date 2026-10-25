@@ -15,12 +15,23 @@ class ShowController extends Controller
         $localMedia = \App\Models\Media::where('tmdb_id', $id)->where('media_type', $type)->first();
 
         if ($localMedia && $localMedia->data) {
-            return is_string($localMedia->data) ? json_decode($localMedia->data, true) : $localMedia->data;
+            $data = is_string($localMedia->data) ? json_decode($localMedia->data, true) : $localMedia->data;
+            // Verify if local record contains rich details (videos or credits) AND is fresh (within 7 days)
+            $hasRichDetails = !empty($data['videos']) || !empty($data['credits']);
+            $isFresh = $localMedia->updated_at && $localMedia->updated_at->gt(now()->subDays(7));
+
+            if ($hasRichDetails && $isFresh) {
+                return $data;
+            }
         }
 
-        // 2. If not in DB, fetch from TMDB with timeout & retry
+        // 2. If not in DB, incomplete stub, or stale: fetch from TMDB with timeout & retry
         $token = config('services.tmdb.token');
         if (empty($token)) {
+            // Fallback to local data if token is missing
+            if (!empty($localMedia) && !empty($localMedia->data)) {
+                return is_string($localMedia->data) ? json_decode($localMedia->data, true) : $localMedia->data;
+            }
             return [];
         }
 
@@ -33,15 +44,19 @@ class ShowController extends Controller
             if ($response->successful()) {
                 $tmdbData = $response->json();
 
-                // 3. Save to local database
+                // 3. Save or update local database using updateOrCreate to prevent duplicate key crashes
                 if (!isset($tmdbData['success']) || $tmdbData['success'] !== false) {
-                    \App\Models\Media::create([
-                        'tmdb_id' => $id,
-                        'media_type' => $type,
-                        'title' => $type === 'movie' ? ($tmdbData['title'] ?? '') : ($tmdbData['name'] ?? ''),
-                        'poster_path' => $tmdbData['poster_path'] ?? null,
-                        'data' => $tmdbData,
-                    ]);
+                    \App\Models\Media::updateOrCreate(
+                        [
+                            'tmdb_id' => $id,
+                            'media_type' => $type,
+                        ],
+                        [
+                            'title' => $type === 'movie' ? ($tmdbData['title'] ?? '') : ($tmdbData['name'] ?? ''),
+                            'poster_path' => $tmdbData['poster_path'] ?? null,
+                            'data' => $tmdbData,
+                        ]
+                    );
                 }
 
                 return $tmdbData;
@@ -50,6 +65,11 @@ class ShowController extends Controller
             Log::warning("TMDB fetchMedia returned HTTP {$response->status()} for {$type}/{$id}");
         } catch (\Throwable $e) {
             Log::warning("TMDB fetchMedia exception for {$type}/{$id}: " . $e->getMessage());
+        }
+
+        // Fallback to existing local data if TMDB request failed (outage resilience)
+        if (!empty($localMedia) && !empty($localMedia->data)) {
+            return is_string($localMedia->data) ? json_decode($localMedia->data, true) : $localMedia->data;
         }
 
         return [];
