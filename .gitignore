@@ -24,4 +24,7 @@ yarn-error.log
 /.idea
 /.vscode
 *.pem
+.agent/
 AGENTS.md
+/deploy/
+*.sql
