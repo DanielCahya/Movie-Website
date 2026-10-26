@@ -17,7 +17,7 @@
                         @php
                             $type = $item['media_type_custom'];
                             $title = $item['title'] ?? $item['name'] ?? 'Unknown';
-                            $poster = isset($item['poster_path']) ? 'https://image.tmdb.org/t/p/w500/'.$item['poster_path'] : 'https://via.placeholder.com/500x750';
+                            $poster = !empty($item['poster_path']) ? 'https://image.tmdb.org/t/p/w500/' . ltrim($item['poster_path'], '/') : 'https://via.placeholder.com/500x750';
                             $year = isset($item['release_date']) || isset($item['first_air_date']) ? \Carbon\Carbon::parse($item['release_date'] ?? $item['first_air_date'])->format('Y') : '';
                             $url = route('watch', ['type' => $type, 'id' => $item['id']]);
                         @endphp

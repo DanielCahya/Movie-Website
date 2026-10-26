@@ -330,7 +330,7 @@
                     <div class="flex items-center space-x-2">
                         <span class="text-xl font-black tracking-wider text-white">GALI<span class="text-brand">WE</span></span>
                     </div>
-                    <p class="text-xs text-gray-500">© {{ date('Y') }} MovieWebsite. All rights reserved.</p>
+                    <p class="text-xs text-gray-500">© {{ date('Y') }} Movie Discovery. All rights reserved.</p>
                     <div class="flex items-center space-x-4 text-xs pt-1">
                         <a href="{{ route('privacy') }}" class="hover:text-brand transition-colors">Privacy Policy</a>
                         <span>•</span>
