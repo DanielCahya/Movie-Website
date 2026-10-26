@@ -15,7 +15,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Weekly off-peak catalog warmup (Sunday at 03:00 AM)
+        $schedule->command('media:warm --pages=3')
+            ->weeklyOn(0, '03:00')
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**
