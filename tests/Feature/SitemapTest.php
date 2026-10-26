@@ -64,12 +64,12 @@ class SitemapTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
 
-        // Verify valid XML structure
+        // Verify valid XML structure and dynamically matched routes
         $response->assertSee('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', false);
-        $response->assertSee('<loc>http://localhost/watch/movie/101</loc>', false);
-        $response->assertSee('<loc>http://localhost/watch/tv/202</loc>', false);
-        $response->assertSee('<loc>http://localhost/forum/category/general-discussion</loc>', false);
-        $response->assertSee('<loc>http://localhost/forum/thread/best-movies-of-the-decade</loc>', false);
+        $response->assertSee('<loc>' . route('watch', ['type' => 'movie', 'id' => 101]) . '</loc>', false);
+        $response->assertSee('<loc>' . route('watch', ['type' => 'tv', 'id' => 202]) . '</loc>', false);
+        $response->assertSee('<loc>' . route('forum.category', ['slug' => 'general-discussion']) . '</loc>', false);
+        $response->assertSee('<loc>' . route('forum.thread', ['slug' => 'best-movies-of-the-decade']) . '</loc>', false);
         $response->assertSee('<lastmod>', false);
 
         // Verify zero external network calls were made to TMDB
@@ -99,9 +99,8 @@ class SitemapTest extends TestCase
 
         $response2 = $this->get('/sitemap.xml');
         $response2->assertStatus(200);
-        $response2->assertSee('<loc>http://localhost/watch/movie/999</loc>', false);
+        $response2->assertSee('<loc>' . route('watch', ['type' => 'movie', 'id' => 999]) . '</loc>', false);
 
         Http::assertNothingSent();
     }
 }
-
