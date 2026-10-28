@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Media;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -242,5 +243,161 @@ class LocalCatalogBrowseTest extends TestCase
         $response->assertSee('No movies found');
         $response->assertSee('Clear All Filters');
     }
-}
 
+    public function test_tvshow_handles_nested_genre_arrays_without_htmlspecialchars_type_error()
+    {
+        Http::fake();
+
+        // Simulate Redis or cache holding unflattened genre arrays from TMDB API
+        Cache::put('tmdb:genres:tv', [
+            0 => ['id' => 10759, 'name' => 'Action & Adventure'],
+            1 => ['id' => 16, 'name' => 'Animation'],
+            2 => ['id' => 35, 'name' => 'Comedy'],
+        ], now()->addHours(1));
+
+        Media::create([
+            'tmdb_id' => 701,
+            'media_type' => 'tv',
+            'title' => 'Action Series Example',
+            'poster_path' => '/action_tv.jpg',
+            'data' => ['id' => 701, 'name' => 'Action Series Example', 'genre_ids' => [10759]],
+        ]);
+
+        $response = $this->get('/tvshow');
+        $response->assertStatus(200);
+        $response->assertSee('Action &amp; Adventure', false);
+        $response->assertSee('Action Series Example');
+    }
+
+    public function test_movie_list_handles_nested_genre_arrays_without_htmlspecialchars_type_error()
+    {
+        Http::fake();
+
+        // Simulate Redis or cache holding unflattened genre arrays from TMDB API
+        Cache::put('tmdb:genres:movie', [
+            0 => ['id' => 28, 'name' => 'Action Film Genre'],
+            1 => ['id' => 12, 'name' => 'Adventure Film Genre'],
+        ], now()->addHours(1));
+
+        Media::create([
+            'tmdb_id' => 801,
+            'media_type' => 'movie',
+            'title' => 'Adventure Movie Example',
+            'poster_path' => '/adv_movie.jpg',
+            'data' => ['id' => 801, 'title' => 'Adventure Movie Example', 'genre_ids' => [12]],
+        ]);
+
+        $response = $this->get('/movieList');
+        $response->assertStatus(200);
+        $response->assertSee('Adventure Film Genre');
+        $response->assertSee('Adventure Movie Example');
+    }
+
+    public function test_animation_serves_from_local_database_with_baseline_genre_16_enforced()
+    {
+        Http::fake();
+
+        // Anime Movie (genre 16)
+        Media::create([
+            'tmdb_id' => 901,
+            'media_type' => 'movie',
+            'title' => 'Spirited Away',
+            'poster_path' => '/spirited.jpg',
+            'data' => ['id' => 901, 'title' => 'Spirited Away', 'genre_ids' => [16, 14], 'vote_average' => 8.5],
+        ]);
+
+        // Anime TV Series (genre 16)
+        Media::create([
+            'tmdb_id' => 902,
+            'media_type' => 'tv',
+            'title' => 'Attack on Titan',
+            'poster_path' => '/aot.jpg',
+            'data' => ['id' => 902, 'name' => 'Attack on Titan', 'genre_ids' => [16, 10759], 'vote_average' => 9.0],
+        ]);
+
+        // Live Action Movie (NO genre 16)
+        Media::create([
+            'tmdb_id' => 903,
+            'media_type' => 'movie',
+            'title' => 'Die Hard Non-Anime',
+            'poster_path' => '/die_hard.jpg',
+            'data' => ['id' => 903, 'title' => 'Die Hard Non-Anime', 'genre_ids' => [28, 53], 'vote_average' => 8.2],
+        ]);
+
+        $response = $this->get('/animation');
+        $response->assertStatus(200);
+        $response->assertSee('Spirited Away');
+        $response->assertSee('Attack on Titan');
+        $response->assertDontSee('Die Hard Non-Anime');
+    }
+
+    public function test_animation_filters_by_format_selector()
+    {
+        Http::fake();
+
+        Media::create([
+            'tmdb_id' => 911,
+            'media_type' => 'movie',
+            'title' => 'Your Name Movie',
+            'poster_path' => '/your_name.jpg',
+            'data' => ['id' => 911, 'title' => 'Your Name Movie', 'genre_ids' => [16], 'vote_average' => 8.8],
+        ]);
+
+        Media::create([
+            'tmdb_id' => 912,
+            'media_type' => 'tv',
+            'title' => 'Demon Slayer Series',
+            'poster_path' => '/demon_slayer.jpg',
+            'data' => ['id' => 912, 'name' => 'Demon Slayer Series', 'genre_ids' => [16], 'vote_average' => 8.7],
+        ]);
+
+        $resMovie = $this->get('/animation?format=movie');
+        $resMovie->assertStatus(200);
+        $resMovie->assertSee('Your Name Movie');
+        $resMovie->assertDontSee('Demon Slayer Series');
+
+        $resTv = $this->get('/animation?format=tv');
+        $resTv->assertStatus(200);
+        $resTv->assertSee('Demon Slayer Series');
+        $resTv->assertDontSee('Your Name Movie');
+    }
+
+    public function test_animation_filters_by_additional_genre_alongside_genre_16()
+    {
+        Http::fake();
+
+        // Anime Fantasy
+        Media::create([
+            'tmdb_id' => 921,
+            'media_type' => 'movie',
+            'title' => 'Fantasy Anime Gem',
+            'poster_path' => '/fantasy.jpg',
+            'data' => ['id' => 921, 'title' => 'Fantasy Anime Gem', 'genre_ids' => [16, 14], 'vote_average' => 8.0],
+        ]);
+
+        // Anime Comedy
+        Media::create([
+            'tmdb_id' => 922,
+            'media_type' => 'tv',
+            'title' => 'Comedy Anime Sitcom',
+            'poster_path' => '/comedy_anime.jpg',
+            'data' => ['id' => 922, 'name' => 'Comedy Anime Sitcom', 'genre_ids' => [16, 35], 'vote_average' => 7.8],
+        ]);
+
+        $response = $this->get('/animation?genre=14');
+        $response->assertStatus(200);
+        $response->assertSee('Fantasy Anime Gem');
+        $response->assertDontSee('Comedy Anime Sitcom');
+    }
+
+    public function test_animation_genre_dropdown_vanishes_animation_genre()
+    {
+        Http::fake();
+
+        $response = $this->get('/animation');
+        $response->assertStatus(200);
+
+        // Option with value "16" must be vanished from the genre dropdown
+        $response->assertDontSee('<option value="16"', false);
+    }
+}
