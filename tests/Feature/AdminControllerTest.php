@@ -50,16 +50,17 @@ class AdminControllerTest extends TestCase
             }
             return Http::response([
                 'results' => [
-                    ['id' => 201, 'name' => 'Sample Anime TV', 'poster_path' => '/anime_tv.jpg'],
-                    ['id' => 202, 'title' => 'Sample Anime Movie', 'poster_path' => '/anime_movie.jpg']
+                    ['id' => 201, 'name' => 'Sample Anime TV', 'poster_path' => '/anime_tv.jpg', 'genre_ids' => [16]],
+                    ['id' => 202, 'title' => 'Sample Anime Movie', 'poster_path' => '/anime_movie.jpg', 'genre_ids' => [16]]
                 ]
             ], 200);
         });
 
         $response = $this->get('/animation');
         $response->assertStatus(200);
-        $response->assertSee('Top Anime TV Shows');
-        $response->assertSee('Top Anime Movies');
+        $response->assertSee('Anime');
+        $response->assertSee('All Formats');
+        $response->assertSee('Filter');
     }
 
     public function test_home_page_falls_back_to_local_media_when_tmdb_is_offline()
@@ -130,4 +131,3 @@ class AdminControllerTest extends TestCase
         $responseTv->assertStatus(200);
     }
 }
-

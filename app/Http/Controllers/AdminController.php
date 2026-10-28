@@ -54,6 +54,21 @@ class AdminController extends Controller
         37 => 'Western',
     ];
 
+    private static ?bool $hasPerformanceColumns = null;
+
+    /**
+     * Check if performance columns vote_average and genre_ids exist on the media table.
+     */
+    private function hasPerformanceColumns(): bool
+    {
+        if (self::$hasPerformanceColumns === null) {
+            self::$hasPerformanceColumns = Schema::hasTable('media')
+                && Schema::hasColumn('media', 'vote_average')
+                && Schema::hasColumn('media', 'genre_ids');
+        }
+        return self::$hasPerformanceColumns;
+    }
+
     /**
      * Safely fetch data from TMDB API with timeout and retry.
      * Returns null on failure so failed responses are not cached long-term.
@@ -97,6 +112,7 @@ class AdminController extends Controller
                 return;
             }
 
+            $hasPerf = $this->hasPerformanceColumns();
             $now = now();
             $insertData = [];
             foreach ($items as $item) {
@@ -104,7 +120,15 @@ class AdminController extends Controller
                     continue;
                 }
                 $mediaType = $item['media_type'] ?? $defaultType;
-                $insertData[] = [
+                $rawGenreIds = $item['genre_ids'] ?? [];
+                $formattedGenreIds = !empty($rawGenreIds) && is_array($rawGenreIds)
+                    ? ',' . implode(',', array_map('intval', $rawGenreIds)) . ','
+                    : null;
+                $voteAvg = isset($item['vote_average']) && is_numeric($item['vote_average'])
+                    ? round((float) $item['vote_average'], 1)
+                    : null;
+
+                $row = [
                     'tmdb_id' => $item['id'],
                     'media_type' => $mediaType,
                     'title' => $item['title'] ?? $item['name'] ?? 'Unknown',
@@ -113,6 +137,13 @@ class AdminController extends Controller
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
+
+                if ($hasPerf) {
+                    $row['vote_average'] = $voteAvg;
+                    $row['genre_ids'] = $formattedGenreIds;
+                }
+
+                $insertData[] = $row;
             }
 
             if (count($insertData) > 0) {
@@ -121,6 +152,35 @@ class AdminController extends Controller
         } catch (\Throwable $e) {
             Log::warning("Failed to sync items to local media table: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Normalize genre data into a flat [id => name] dictionary.
+     * Prevents TypeError in htmlspecialchars when cached genres contain raw TMDB item arrays.
+     */
+    private function normalizeGenres(mixed $genres): array
+    {
+        if ($genres instanceof Collection) {
+            $genres = $genres->all();
+        }
+        if (!is_array($genres)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($genres as $key => $val) {
+            if (is_array($val)) {
+                $id = $val['id'] ?? $key;
+                $name = $val['name'] ?? null;
+                if ($name !== null && is_scalar($name)) {
+                    $normalized[(int) $id] = (string) $name;
+                }
+            } elseif (is_scalar($val)) {
+                $normalized[(int) $key] = (string) $val;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -136,20 +196,24 @@ class AdminController extends Controller
             $query = Media::where('media_type', $type);
 
             if ($genreId !== null) {
-                $driver = DB::connection()->getDriverName();
-                if ($driver === 'mysql') {
-                    $query->where(function ($q) use ($genreId) {
-                        $q->whereJsonContains('data->genre_ids', $genreId)
-                          ->orWhere('data', 'like', '%"id":' . $genreId . '%');
-                    });
+                if ($this->hasPerformanceColumns()) {
+                    $query->where('genre_ids', 'like', "%,{$genreId},%");
                 } else {
-                    $query->where(function ($q) use ($genreId) {
-                        $q->where('data', 'like', '%"genre_ids":%[' . $genreId . ',%')
-                          ->orWhere('data', 'like', '%"genre_ids":%,' . $genreId . ',%')
-                          ->orWhere('data', 'like', '%"genre_ids":%,' . $genreId . ']%')
-                          ->orWhere('data', 'like', '%"genre_ids":%[' . $genreId . ']%')
-                          ->orWhere('data', 'like', '%"id":' . $genreId . '%');
-                    });
+                    $driver = DB::connection()->getDriverName();
+                    if ($driver === 'mysql') {
+                        $query->where(function ($q) use ($genreId) {
+                            $q->whereJsonContains('data->genre_ids', $genreId)
+                              ->orWhere('data', 'like', '%"id":' . $genreId . '%');
+                        });
+                    } else {
+                        $query->where(function ($q) use ($genreId) {
+                            $q->where('data', 'like', '%"genre_ids":%[' . $genreId . ',%')
+                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreId . ',%')
+                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreId . ']%')
+                              ->orWhere('data', 'like', '%"genre_ids":%[' . $genreId . ']%')
+                              ->orWhere('data', 'like', '%"id":' . $genreId . '%');
+                        });
+                    }
                 }
             }
 
@@ -212,7 +276,10 @@ class AdminController extends Controller
             if (Cache::has('tmdb:genres:movie')) {
                 $cached = Cache::get('tmdb:genres:movie');
                 if (!empty($cached)) {
-                    return collect($cached);
+                    $normalized = $this->normalizeGenres($cached);
+                    if (!empty($normalized)) {
+                        return collect($normalized);
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -225,17 +292,14 @@ class AdminController extends Controller
 
         $genres = $this->fetchTmdb('https://api.themoviedb.org/3/genre/movie/list', [], 'genres');
         if (!empty($genres)) {
-            $mapped = collect($genres)->mapWithKeys(function ($genre) {
-                return [$genre['id'] => $genre['name']];
-            });
-
+            $normalized = $this->normalizeGenres($genres);
             try {
-                Cache::put('tmdb:genres:movie', $mapped->toArray(), now()->addDays(7));
+                Cache::put('tmdb:genres:movie', $normalized, now()->addDays(7));
             } catch (\Throwable $e) {
                 Log::warning("Cache write failed in getMovieGenres: " . $e->getMessage());
             }
 
-            return $mapped;
+            return collect($normalized);
         }
 
         return collect(self::MOVIE_GENRES);
@@ -247,7 +311,10 @@ class AdminController extends Controller
             if (Cache::has('tmdb:genres:tv')) {
                 $cached = Cache::get('tmdb:genres:tv');
                 if (!empty($cached)) {
-                    return collect($cached);
+                    $normalized = $this->normalizeGenres($cached);
+                    if (!empty($normalized)) {
+                        return collect($normalized);
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -260,20 +327,314 @@ class AdminController extends Controller
 
         $genres = $this->fetchTmdb('https://api.themoviedb.org/3/genre/tv/list', [], 'genres');
         if (!empty($genres)) {
-            $mapped = collect($genres)->mapWithKeys(function ($genre) {
-                return [$genre['id'] => $genre['name']];
-            });
-
+            $normalized = $this->normalizeGenres($genres);
             try {
-                Cache::put('tmdb:genres:tv', $mapped->toArray(), now()->addDays(7));
+                Cache::put('tmdb:genres:tv', $normalized, now()->addDays(7));
             } catch (\Throwable $e) {
                 Log::warning("Cache write failed in getTvGenres: " . $e->getMessage());
             }
 
-            return $mapped;
+            return collect($normalized);
         }
 
         return collect(self::TV_GENRES);
+    }
+
+    /**
+     * Retrieve combined distinct genres for Anime catalog, vanishing genre 16 and any "Animation" genre.
+     */
+    private function getAnimeGenres(): Collection
+    {
+        $movieGenres = $this->getMovieGenres();
+        $tvGenres = $this->getTvGenres();
+
+        $combined = [];
+        foreach ($movieGenres as $id => $name) {
+            $combined[(int) $id] = $name;
+        }
+        foreach ($tvGenres as $id => $name) {
+            $combined[(int) $id] = $name;
+        }
+
+        $filtered = [];
+        foreach ($combined as $id => $name) {
+            if ((int) $id === 16 || strcasecmp(trim((string) $name), 'Animation') === 0) {
+                continue;
+            }
+            $filtered[(int) $id] = (string) $name;
+        }
+
+        asort($filtered);
+
+        return collect($filtered);
+    }
+
+    /**
+     * Query media catalog with high-performance indexes, cached counts, and robust pagination.
+     */
+    private function queryCatalog(Request $request, string $mediaType): LengthAwarePaginator
+    {
+        $genreId = $request->query('genre');
+        $sort = (string) $request->query('sort', 'latest');
+        $search = trim((string) ($request->query('q') ?? $request->query('search', '')));
+
+        try {
+            if (Schema::hasTable('media')) {
+                // Cold-start fallback only if local catalog for this media type has zero records.
+                // Uses exists() which leverages the composite index rather than scanning count().
+                if (!Media::where('media_type', $mediaType)->exists()) {
+                    if ($mediaType === 'tv') {
+                        $this->rememberTmdb('tmdb:tv_top_rated', 'https://api.themoviedb.org/3/tv/top_rated');
+                        $this->rememberTmdb('tmdb:new_tv', 'https://api.themoviedb.org/3/tv/popular');
+                    } else {
+                        $this->rememberTmdb('tmdb:top_rated', 'https://api.themoviedb.org/3/movie/top_rated');
+                        $this->rememberTmdb('tmdb:popular_movies', 'https://api.themoviedb.org/3/movie/popular');
+                    }
+                }
+
+                $query = Media::where('media_type', $mediaType);
+
+                // Filter by title keyword
+                if ($search !== '') {
+                    $query->where('title', 'like', "%{$search}%");
+                }
+
+                // Filter by genre
+                if (!empty($genreId)) {
+                    $genreIdInt = (int) $genreId;
+                    if ($this->hasPerformanceColumns()) {
+                        $query->where('genre_ids', 'like', "%,{$genreIdInt},%");
+                    } else {
+                        $driver = DB::connection()->getDriverName();
+                        if ($driver === 'mysql') {
+                            $query->where(function ($q) use ($genreIdInt, $genreId) {
+                                $q->whereJsonContains('data->genre_ids', $genreIdInt)
+                                  ->orWhereJsonContains('data->genre_ids', (string) $genreId)
+                                  ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%')
+                                  ->orWhere('data', 'like', '%[' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%,' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%,' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%[' . $genreIdInt . ']%');
+                            });
+                        } else {
+                            $query->where(function ($q) use ($genreIdInt) {
+                                $q->where('data', 'like', '%"genre_ids":%[' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%[' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%');
+                            });
+                        }
+                    }
+                }
+
+                // Sorting
+                if ($sort === 'rating') {
+                    if ($this->hasPerformanceColumns()) {
+                        $query->orderBy('vote_average', 'desc')->orderBy('id', 'desc');
+                    } else {
+                        $driver = DB::connection()->getDriverName();
+                        if ($driver === 'sqlite') {
+                            $query->orderByRaw("CAST(json_extract(data, '$.vote_average') AS REAL) DESC");
+                        } else {
+                            $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.vote_average')) AS DECIMAL(4,1)) DESC");
+                        }
+                    }
+                } elseif ($sort === 'title_asc') {
+                    $query->orderBy('title', 'asc')->orderBy('id', 'desc');
+                } elseif ($sort === 'title_desc') {
+                    $query->orderBy('title', 'desc')->orderBy('id', 'desc');
+                } else {
+                    $query->latest('id');
+                }
+
+                $page = max(1, (int) $request->query('page', 1));
+                $perPage = 24;
+
+                // Cache catalog total count to avoid repeating expensive COUNT(*) scans on 50k+ records
+                $countCacheKey = "media:count:{$mediaType}:" . md5($search . '|' . ($genreId ?? ''));
+                $total = app()->runningUnitTests()
+                    ? (clone $query)->count()
+                    : (int) Cache::remember($countCacheKey, now()->addMinutes(10), function () use ($query) {
+                        return (clone $query)->count();
+                    });
+
+                $items = (clone $query)->forPage($page, $perPage)->get();
+
+                return new LengthAwarePaginator(
+                    $items,
+                    $total,
+                    $perPage,
+                    $page,
+                    [
+                        'path' => $request->url(),
+                        'query' => $request->query(),
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Error querying {$mediaType} catalog: " . $e->getMessage());
+        }
+
+        return new LengthAwarePaginator([], 0, 24, 1, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
+    }
+
+    /**
+     * Query anime catalog with baseline Animation genre enforcement (ID 16),
+     * format filtering (all/movie/tv), and high-performance indexed queries.
+     */
+    private function queryAnimeCatalog(Request $request): LengthAwarePaginator
+    {
+        $format = (string) $request->query('format', '');
+        $genreId = $request->query('genre');
+        $sort = (string) $request->query('sort', 'latest');
+        $search = trim((string) ($request->query('q') ?? $request->query('search', '')));
+
+        try {
+            if (Schema::hasTable('media')) {
+                // Cold-start fallback only if local anime catalog has zero records
+                if ($this->hasPerformanceColumns()) {
+                    $hasAnime = Media::where('genre_ids', 'like', '%,16,%')->exists();
+                } else {
+                    $hasAnime = Media::where('data', 'like', '%"id":16%')->exists();
+                }
+
+                if (!$hasAnime) {
+                    $this->rememberTmdb('tmdb:tv_top_anime', 'https://api.themoviedb.org/3/discover/tv', [
+                        'sort_by' => 'vote_count.desc',
+                        'with_genres' => 16,
+                    ]);
+                    $this->rememberTmdb('tmdb:anime', 'https://api.themoviedb.org/3/discover/movie', [
+                        'with_genres' => 16,
+                    ]);
+                }
+
+                $query = Media::query();
+
+                // Format filter: all, tv, movie
+                if ($format === 'tv') {
+                    $query->where('media_type', 'tv');
+                } elseif ($format === 'movie') {
+                    $query->where('media_type', 'movie');
+                } else {
+                    $query->whereIn('media_type', ['movie', 'tv']);
+                }
+
+                // Automatic Baseline Constraint: Must always include genre 16 (Animation)
+                if ($this->hasPerformanceColumns()) {
+                    $query->where('genre_ids', 'like', '%,16,%');
+                } else {
+                    $driver = DB::connection()->getDriverName();
+                    if ($driver === 'mysql') {
+                        $query->where(function ($q) {
+                            $q->whereJsonContains('data->genre_ids', 16)
+                              ->orWhereJsonContains('data->genre_ids', '16')
+                              ->orWhere('data', 'like', '%"id":16%')
+                              ->orWhere('data', 'like', '%[16,%')
+                              ->orWhere('data', 'like', '%,16,%')
+                              ->orWhere('data', 'like', '%,16]%')
+                              ->orWhere('data', 'like', '%[16]%');
+                        });
+                    } else {
+                        $query->where(function ($q) {
+                            $q->where('data', 'like', '%"genre_ids":%[16,%')
+                              ->orWhere('data', 'like', '%"genre_ids":%,16,%')
+                              ->orWhere('data', 'like', '%"genre_ids":%,16]%')
+                              ->orWhere('data', 'like', '%"genre_ids":%[16]%')
+                              ->orWhere('data', 'like', '%"id":16%');
+                        });
+                    }
+                }
+
+                // Additional Genre Constraint: Match chosen genre ID alongside genre 16
+                if (!empty($genreId) && (int) $genreId !== 16) {
+                    $genreIdInt = (int) $genreId;
+                    if ($this->hasPerformanceColumns()) {
+                        $query->where('genre_ids', 'like', "%,{$genreIdInt},%");
+                    } else {
+                        $driver = DB::connection()->getDriverName();
+                        if ($driver === 'mysql') {
+                            $query->where(function ($q) use ($genreIdInt, $genreId) {
+                                $q->whereJsonContains('data->genre_ids', $genreIdInt)
+                                  ->orWhereJsonContains('data->genre_ids', (string) $genreId)
+                                  ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%')
+                                  ->orWhere('data', 'like', '%[' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%,' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%,' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%[' . $genreIdInt . ']%');
+                            });
+                        } else {
+                            $query->where(function ($q) use ($genreIdInt) {
+                                $q->where('data', 'like', '%"genre_ids":%[' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ',%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%"genre_ids":%[' . $genreIdInt . ']%')
+                                  ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%');
+                            });
+                        }
+                    }
+                }
+
+                // Filter by title keyword
+                if ($search !== '') {
+                    $query->where('title', 'like', "%{$search}%");
+                }
+
+                // Sorting
+                if ($sort === 'rating') {
+                    if ($this->hasPerformanceColumns()) {
+                        $query->orderBy('vote_average', 'desc')->orderBy('id', 'desc');
+                    } else {
+                        $driver = DB::connection()->getDriverName();
+                        if ($driver === 'sqlite') {
+                            $query->orderByRaw("CAST(json_extract(data, '$.vote_average') AS REAL) DESC");
+                        } else {
+                            $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.vote_average')) AS DECIMAL(4,1)) DESC");
+                        }
+                    }
+                } elseif ($sort === 'title_asc') {
+                    $query->orderBy('title', 'asc')->orderBy('id', 'desc');
+                } elseif ($sort === 'title_desc') {
+                    $query->orderBy('title', 'desc')->orderBy('id', 'desc');
+                } else {
+                    $query->latest('id');
+                }
+
+                $page = max(1, (int) $request->query('page', 1));
+                $perPage = 24;
+
+                // Cache anime catalog total count
+                $countCacheKey = 'media:count:anime:' . md5($search . '|' . $format . '|' . ($genreId ?? ''));
+                $total = app()->runningUnitTests()
+                    ? (clone $query)->count()
+                    : (int) Cache::remember($countCacheKey, now()->addMinutes(10), function () use ($query) {
+                        return (clone $query)->count();
+                    });
+
+                $items = (clone $query)->forPage($page, $perPage)->get();
+
+                return new LengthAwarePaginator(
+                    $items,
+                    $total,
+                    $perPage,
+                    $page,
+                    [
+                        'path' => $request->url(),
+                        'query' => $request->query(),
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Error querying anime catalog: " . $e->getMessage());
+        }
+
+        return new LengthAwarePaginator([], 0, 24, 1, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
     }
 
     public function index()
@@ -325,78 +686,8 @@ class AdminController extends Controller
         $genreId = $request->query('genre');
         $sort = (string) $request->query('sort', 'latest');
         $search = trim((string) ($request->query('q') ?? $request->query('search', '')));
-        $shows = null;
 
-        try {
-            if (Schema::hasTable('media')) {
-                // Cold-start fallback only if local TV catalog is completely unpopulated
-                if (Media::where('media_type', 'tv')->count() === 0) {
-                    $this->rememberTmdb('tmdb:tv_top_rated', 'https://api.themoviedb.org/3/tv/top_rated');
-                    $this->rememberTmdb('tmdb:new_tv', 'https://api.themoviedb.org/3/tv/popular');
-                }
-
-                $query = Media::where('media_type', 'tv');
-
-                // Filter by title keyword
-                if ($search !== '') {
-                    $query->where('title', 'like', "%{$search}%");
-                }
-
-                // Filter by genre
-                if (!empty($genreId)) {
-                    $genreIdInt = (int) $genreId;
-                    $driver = DB::connection()->getDriverName();
-                    if ($driver === 'mysql') {
-                        $query->where(function ($q) use ($genreIdInt, $genreId) {
-                            $q->whereJsonContains('data->genre_ids', $genreIdInt)
-                              ->orWhereJsonContains('data->genre_ids', (string) $genreId)
-                              ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%')
-                              ->orWhere('data', 'like', '%[' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%,' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%,' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%[' . $genreIdInt . ']%');
-                        });
-                    } else {
-                        $query->where(function ($q) use ($genreIdInt) {
-                            $q->where('data', 'like', '%"genre_ids":%[' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%"genre_ids":%[' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%');
-                        });
-                    }
-                }
-
-                // Sort ordering
-                if ($sort === 'rating') {
-                    $driver = DB::connection()->getDriverName();
-                    if ($driver === 'sqlite') {
-                        $query->orderByRaw("CAST(json_extract(data, '$.vote_average') AS REAL) DESC");
-                    } else {
-                        $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.vote_average')) AS DECIMAL(4,1)) DESC");
-                    }
-                } elseif ($sort === 'title_asc') {
-                    $query->orderBy('title', 'asc');
-                } elseif ($sort === 'title_desc') {
-                    $query->orderBy('title', 'desc');
-                } else {
-                    $query->latest('id');
-                }
-
-                /** @var LengthAwarePaginator $shows */
-                $shows = $query->paginate(24);
-                $shows->appends($request->query());
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Error querying tv shows catalog: " . $e->getMessage());
-        }
-
-        if ($shows === null) {
-            $shows = new LengthAwarePaginator([], 0, 24, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
-        }
+        $shows = $this->queryCatalog($request, 'tv');
 
         $genres = $this->getMovieGenres();
         $genresTv = $this->getTvGenres();
@@ -412,43 +703,25 @@ class AdminController extends Controller
         ]);
     }
 
-    public function animation()
+    public function animation(Request $request)
     {
-        $genreId = 16;
+        $format = (string) $request->query('format', '');
+        $genreId = $request->query('genre');
+        $sort = (string) $request->query('sort', 'latest');
+        $search = trim((string) ($request->query('q') ?? $request->query('search', '')));
 
-        $popularMovies = $this->rememberTmdb('tmdb:popular_movies', 'https://api.themoviedb.org/3/movie/popular');
-        if (empty($popularMovies)) {
-            $popularMovies = $this->getLocalMediaFallback('movie', 20);
-        }
-
-        $topAn = $this->rememberTmdb('tmdb:tv_top_anime', 'https://api.themoviedb.org/3/discover/tv', [
-            'sort_by' => 'vote_count.desc',
-            'with_genres' => $genreId,
-        ]);
-        if (empty($topAn)) {
-            $topAn = $this->getLocalMediaFallback('tv', 20, $genreId);
-        }
-
-        $newtv = $this->rememberTmdb('tmdb:tv_airing_today', 'https://api.themoviedb.org/3/tv/airing_today');
-        if (empty($newtv)) {
-            $newtv = $this->getLocalMediaFallback('tv', 20);
-        }
-
-        $anime = $this->rememberTmdb('tmdb:anime', 'https://api.themoviedb.org/3/discover/movie', ['with_genres' => $genreId]);
-        if (empty($anime)) {
-            $anime = $this->getLocalMediaFallback('movie', 20, $genreId);
-        }
-
-        $genres = $this->getMovieGenres();
-        $genresTv = $this->getTvGenres();
+        $items = $this->queryAnimeCatalog($request);
+        $animeGenres = $this->getAnimeGenres();
 
         return view('Animation.animation', [
-            'popularMovies' => $popularMovies,
-            'newtv' => $newtv,
-            'anime' => $anime,
-            'genresTv' => $genresTv,
-            'genres' => $genres,
-            'topAn' => $topAn,
+            'items' => $items,
+            'topAn' => $items, // Backward compatibility
+            'anime' => $items, // Backward compatibility
+            'genres' => $animeGenres,
+            'selectedFormat' => $format,
+            'selectedGenre' => $genreId,
+            'selectedSort' => $sort,
+            'searchQuery' => $search,
         ]);
     }
 
@@ -457,78 +730,8 @@ class AdminController extends Controller
         $genreId = $request->query('genre');
         $sort = (string) $request->query('sort', 'latest');
         $search = trim((string) ($request->query('q') ?? $request->query('search', '')));
-        $movies = null;
 
-        try {
-            if (Schema::hasTable('media')) {
-                // Cold-start fallback only if local movie catalog is completely unpopulated
-                if (Media::where('media_type', 'movie')->count() === 0) {
-                    $this->rememberTmdb('tmdb:top_rated', 'https://api.themoviedb.org/3/movie/top_rated');
-                    $this->rememberTmdb('tmdb:popular_movies', 'https://api.themoviedb.org/3/movie/popular');
-                }
-
-                $query = Media::where('media_type', 'movie');
-
-                // Filter by title keyword
-                if ($search !== '') {
-                    $query->where('title', 'like', "%{$search}%");
-                }
-
-                // Filter by genre
-                if (!empty($genreId)) {
-                    $genreIdInt = (int) $genreId;
-                    $driver = DB::connection()->getDriverName();
-                    if ($driver === 'mysql') {
-                        $query->where(function ($q) use ($genreIdInt, $genreId) {
-                            $q->whereJsonContains('data->genre_ids', $genreIdInt)
-                              ->orWhereJsonContains('data->genre_ids', (string) $genreId)
-                              ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%')
-                              ->orWhere('data', 'like', '%[' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%,' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%,' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%[' . $genreIdInt . ']%');
-                        });
-                    } else {
-                        $query->where(function ($q) use ($genreIdInt) {
-                            $q->where('data', 'like', '%"genre_ids":%[' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ',%')
-                              ->orWhere('data', 'like', '%"genre_ids":%,' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%"genre_ids":%[' . $genreIdInt . ']%')
-                              ->orWhere('data', 'like', '%"id":' . $genreIdInt . '%');
-                        });
-                    }
-                }
-
-                // Sort ordering
-                if ($sort === 'rating') {
-                    $driver = DB::connection()->getDriverName();
-                    if ($driver === 'sqlite') {
-                        $query->orderByRaw("CAST(json_extract(data, '$.vote_average') AS REAL) DESC");
-                    } else {
-                        $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.vote_average')) AS DECIMAL(4,1)) DESC");
-                    }
-                } elseif ($sort === 'title_asc') {
-                    $query->orderBy('title', 'asc');
-                } elseif ($sort === 'title_desc') {
-                    $query->orderBy('title', 'desc');
-                } else {
-                    $query->latest('id');
-                }
-
-                /** @var LengthAwarePaginator $movies */
-                $movies = $query->paginate(24);
-                $movies->appends($request->query());
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Error querying movies catalog: " . $e->getMessage());
-        }
-
-        if ($movies === null) {
-            $movies = new LengthAwarePaginator([], 0, 24, 1, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]);
-        }
+        $movies = $this->queryCatalog($request, 'movie');
 
         $genres = $this->getMovieGenres();
 

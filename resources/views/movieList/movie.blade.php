@@ -29,17 +29,20 @@
                 <div class="lg:col-span-3 relative">
                     <select 
                         name="genre" 
-                        onchange="this.form.submit()" 
                         class="w-full appearance-none bg-slate-900/90 border border-slate-700/80 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all cursor-pointer"
                     >
                         <option value="">All Genres</option>
-                        @foreach ($genres ?? [] as $id => $name)
-                            <option value="{{ $id }}" {{ (string)($selectedGenre ?? '') === (string)$id ? 'selected' : '' }}>
-                                {{ $name }}
+                        @foreach ($genres ?? [] as $id => $genreItem)
+                            @php
+                                $genreOptId = is_array($genreItem) ? ($genreItem['id'] ?? $id) : $id;
+                                $genreOptName = is_array($genreItem) ? ($genreItem['name'] ?? 'Genre ' . $genreOptId) : (string) $genreItem;
+                            @endphp
+                            <option value="{{ $genreOptId }}" {{ (string)($selectedGenre ?? '') === (string)$genreOptId ? 'selected' : '' }}>
+                                {{ $genreOptName }}
                             </option>
                         @endforeach
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
                         <i class="bx bx-chevron-down text-lg"></i>
                     </div>
                 </div>
@@ -48,7 +51,6 @@
                 <div class="lg:col-span-2 relative">
                     <select 
                         name="sort" 
-                        onchange="this.form.submit()" 
                         class="w-full appearance-none bg-slate-900/90 border border-slate-700/80 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all cursor-pointer"
                     >
                         <option value="latest" {{ ($selectedSort ?? 'latest') === 'latest' ? 'selected' : '' }}>Recently Added</option>
@@ -56,7 +58,7 @@
                         <option value="title_asc" {{ ($selectedSort ?? '') === 'title_asc' ? 'selected' : '' }}>Title (A - Z)</option>
                         <option value="title_desc" {{ ($selectedSort ?? '') === 'title_desc' ? 'selected' : '' }}>Title (Z - A)</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
                         <i class="bx bx-chevron-down text-lg"></i>
                     </div>
                 </div>
@@ -91,10 +93,24 @@
             <div class="spotlight-group grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 relative z-20">
                 @foreach ($itemList as $movie)
                 @php
-                    $tmdbId = $movie->tmdb_id ?? $movie['tmdb_id'] ?? $movie['id'];
-                    $title = $movie->title ?? $movie['title'] ?? 'Unknown';
-                    $poster = $movie->poster_path ?? $movie['poster_path'] ?? null;
-                    $voteAverage = $movie->data['vote_average'] ?? $movie['vote_average'] ?? null;
+                    if (is_object($movie)) {
+                        $tmdbId = $movie->tmdb_id ?? $movie->id ?? null;
+                        $title = $movie->title ?? $movie->name ?? 'Unknown';
+                        $poster = $movie->poster_path ?? null;
+                        $movieData = is_array($movie->data ?? null) ? $movie->data : [];
+                        $voteAverage = $movie->vote_average ?? ($movieData['vote_average'] ?? null);
+                    } elseif (is_array($movie)) {
+                        $tmdbId = $movie['tmdb_id'] ?? $movie['id'] ?? null;
+                        $title = $movie['title'] ?? $movie['name'] ?? 'Unknown';
+                        $poster = $movie['poster_path'] ?? null;
+                        $movieData = is_array($movie['data'] ?? null) ? $movie['data'] : [];
+                        $voteAverage = $movie['vote_average'] ?? ($movieData['vote_average'] ?? null);
+                    } else {
+                        $tmdbId = null;
+                        $title = 'Unknown';
+                        $poster = null;
+                        $voteAverage = null;
+                    }
                 @endphp
                 <a wire:navigate.hover href="{{ route('watch', ['type' => 'movie', 'id' => $tmdbId]) }}" class="spotlight-card block relative cursor-pointer group">
                     <div x-data="{ loaded: false }" class="relative rounded-xl overflow-hidden mb-3 aspect-[2/3] bg-brand-card shadow-lg ring-1 ring-white/5 transition-all duration-300">
@@ -135,7 +151,7 @@
             </div>
 
             <!-- Pagination Links -->
-            @if(method_exists($itemList, 'links'))
+            @if($itemList instanceof \Illuminate\Pagination\LengthAwarePaginator || (is_object($itemList) && method_exists($itemList, 'links')))
                 <div class="mt-12 flex justify-center">
                     {{ $itemList->links('vendor.pagination.tailwind') }}
                 </div>
