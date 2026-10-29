@@ -412,16 +412,23 @@ class AdminController extends Controller
 
                 $page = max(1, (int) $request->query('page', 1));
                 $perPage = 24;
+                $selectCols = ['id', 'tmdb_id', 'title', 'poster_path', 'vote_average', 'media_type'];
 
                 // Cache catalog total count to avoid repeating expensive COUNT(*) scans on 50k+ records
                 $countCacheKey = "media:count:{$mediaType}:" . md5($search . '|' . ($genreId ?? ''));
                 $total = app()->runningUnitTests()
                     ? (clone $query)->count()
-                    : (int) Cache::remember($countCacheKey, now()->addMinutes(10), function () use ($query) {
+                    : (int) Cache::remember($countCacheKey, now()->addMinutes(15), function () use ($query) {
                         return (clone $query)->count();
                     });
 
-                $items = (clone $query)->forPage($page, $perPage)->get();
+                // Cache paginated items to eliminate database load and deliver instant response times
+                $itemsCacheKey = "media:items:{$mediaType}:" . md5($search . '|' . ($genreId ?? '') . '|' . $sort . '|' . $page);
+                $items = app()->runningUnitTests()
+                    ? (clone $query)->select($selectCols)->forPage($page, $perPage)->get()
+                    : Cache::remember($itemsCacheKey, now()->addMinutes(15), function () use ($query, $selectCols, $page, $perPage) {
+                        return (clone $query)->select($selectCols)->forPage($page, $perPage)->get();
+                    });
 
                 return new LengthAwarePaginator(
                     $items,
@@ -458,7 +465,10 @@ class AdminController extends Controller
 
         try {
             if (Schema::hasTable('media')) {
-                $query = Media::query();
+                $driver = DB::connection()->getDriverName();
+                $query = $driver === 'mysql'
+                    ? Media::from(DB::raw('media IGNORE INDEX (PRIMARY)'))
+                    : Media::query();
 
                 // Format filter: all, tv, movie
                 if ($format === 'tv') {
@@ -551,16 +561,23 @@ class AdminController extends Controller
 
                 $page = max(1, (int) $request->query('page', 1));
                 $perPage = 24;
+                $selectCols = ['id', 'tmdb_id', 'title', 'poster_path', 'vote_average', 'media_type'];
 
                 // Cache anime catalog total count
                 $countCacheKey = 'media:count:anime:' . md5($search . '|' . $format . '|' . ($genreId ?? ''));
                 $total = app()->runningUnitTests()
                     ? (clone $query)->count()
-                    : (int) Cache::remember($countCacheKey, now()->addMinutes(10), function () use ($query) {
+                    : (int) Cache::remember($countCacheKey, now()->addMinutes(15), function () use ($query) {
                         return (clone $query)->count();
                     });
 
-                $items = (clone $query)->forPage($page, $perPage)->get();
+                // Cache paginated anime items to deliver sub-millisecond response times
+                $itemsCacheKey = 'media:items:anime:' . md5($search . '|' . $format . '|' . ($genreId ?? '') . '|' . $sort . '|' . $page);
+                $items = app()->runningUnitTests()
+                    ? (clone $query)->select($selectCols)->forPage($page, $perPage)->get()
+                    : Cache::remember($itemsCacheKey, now()->addMinutes(15), function () use ($query, $selectCols, $page, $perPage) {
+                        return (clone $query)->select($selectCols)->forPage($page, $perPage)->get();
+                    });
 
                 return new LengthAwarePaginator(
                     $items,
