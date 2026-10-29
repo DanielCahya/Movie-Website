@@ -525,10 +525,7 @@ class AdminController extends Controller
                 if ($search !== '') {
                     $localAnimeCount = Media::whereIn('media_type', ['movie', 'tv'])
                         ->where('title', 'like', "%{$search}%")
-                        ->where(function ($q) {
-                            $q->where('genre_ids', 'like', '%,16,%')
-                              ->orWhere('data', 'like', '%"id":16%');
-                        })
+                        ->where('genre_ids', 'like', '%,16,%')
                         ->count();
 
                     if ($localAnimeCount === 0) {
@@ -552,19 +549,7 @@ class AdminController extends Controller
 
                 // Automatic Baseline Constraint: Must always include genre 16 (Animation)
                 if ($this->hasPerformanceColumns()) {
-                    $query->where(function ($q) {
-                        $q->where('genre_ids', 'like', '%,16,%')
-                          ->orWhere(function ($sub) {
-                              $sub->whereNull('genre_ids')
-                                  ->where(function ($d) {
-                                      $d->where('data', 'like', '%"id":16%')
-                                        ->orWhere('data', 'like', '%"genre_ids":%[16,%')
-                                        ->orWhere('data', 'like', '%"genre_ids":%,16,%')
-                                        ->orWhere('data', 'like', '%"genre_ids":%,16]%')
-                                        ->orWhere('data', 'like', '%"genre_ids":%[16]%');
-                                  });
-                          });
-                    });
+                    $query->where('genre_ids', 'like', '%,16,%');
                 } else {
                     $driver = DB::connection()->getDriverName();
                     if ($driver === 'mysql') {
