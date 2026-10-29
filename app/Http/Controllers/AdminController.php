@@ -99,7 +99,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Store retrieved items into local Media catalog to reduce future TMDB API reliance.
+     * Store retrieved items into local Media catalog to reduce future TMDB reliance.
      */
     private function syncLocalMedia(array $items, string $defaultType = 'movie'): void
     {
@@ -121,8 +121,17 @@ class AdminController extends Controller
                 }
                 $mediaType = $item['media_type'] ?? $defaultType;
                 $rawGenreIds = $item['genre_ids'] ?? [];
+                if (empty($rawGenreIds) && !empty($item['genres']) && is_array($item['genres'])) {
+                    foreach ($item['genres'] as $g) {
+                        if (is_array($g) && isset($g['id'])) {
+                            $rawGenreIds[] = (int) $g['id'];
+                        } elseif (is_numeric($g)) {
+                            $rawGenreIds[] = (int) $g;
+                        }
+                    }
+                }
                 $formattedGenreIds = !empty($rawGenreIds) && is_array($rawGenreIds)
-                    ? ',' . implode(',', array_map('intval', $rawGenreIds)) . ','
+                    ? ',' . implode(',', array_map('intval', array_unique($rawGenreIds))) . ','
                     : null;
                 $voteAvg = isset($item['vote_average']) && is_numeric($item['vote_average'])
                     ? round((float) $item['vote_average'], 1)
@@ -147,10 +156,59 @@ class AdminController extends Controller
             }
 
             if (count($insertData) > 0) {
-                Media::insertOrIgnore($insertData);
+                if ($hasPerf) {
+                    Media::upsert(
+                        $insertData,
+                        ['tmdb_id', 'media_type'],
+                        ['title', 'poster_path', 'vote_average', 'genre_ids', 'updated_at']
+                    );
+                } else {
+                    Media::insertOrIgnore($insertData);
+                }
             }
         } catch (\Throwable $e) {
             Log::warning("Failed to sync items to local media table: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Auto-discover missing titles from TMDB search when local search returns zero items.
+     */
+    private function autoDiscoverFromTmdb(string $search, string $mediaType): void
+    {
+        if (trim($search) === '') {
+            return;
+        }
+
+        try {
+            $token = config('services.tmdb.token');
+            if (empty($token)) {
+                return;
+            }
+
+            $endpoint = $mediaType === 'movie'
+                ? 'https://api.themoviedb.org/3/search/movie'
+                : ($mediaType === 'tv' ? 'https://api.themoviedb.org/3/search/tv' : 'https://api.themoviedb.org/3/search/multi');
+
+            $response = Http::withToken($token)
+                ->connectTimeout(2)
+                ->timeout(3)
+                ->get($endpoint, [
+                    'query' => $search,
+                    'include_adult' => 'false',
+                ]);
+
+            if (!$response->successful()) {
+                return;
+            }
+
+            $results = $response->json('results') ?? [];
+            if (!empty($results)) {
+                $defaultType = ($mediaType === 'tv' || $mediaType === 'anime') ? 'tv' : 'movie';
+                $this->syncLocalMedia($results, $defaultType);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Auto-discover TMDB search exception for '{$search}': " . $e->getMessage());
         }
     }
 
@@ -184,7 +242,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Retrieve fallback items from local database when external TMDB is offline or unseeded.
+     * Retrieve local fallback media rows to guarantee zero-blank-screen resilience during TMDB outages.
      */
     private function getLocalMediaFallback(string $type, int $limit = 20, ?int $genreId = null): array
     {
@@ -221,71 +279,61 @@ class AdminController extends Controller
                 ->take($limit)
                 ->get()
                 ->map(function ($media) {
-                    $data = is_array($media->data) ? $media->data : (json_decode($media->data, true) ?? []);
-                    $data['id'] = $media->tmdb_id;
-                    $data['title'] = $media->title;
-                    $data['name'] = $media->title;
-                    $data['poster_path'] = $media->poster_path;
-                    $data['backdrop_path'] = $data['backdrop_path'] ?? $media->poster_path ?? '';
-                    $data['vote_average'] = $data['vote_average'] ?? $media->vote_average ?? 0;
-                    $data['release_date'] = $data['release_date'] ?? $data['first_air_date'] ?? '';
-                    $data['genre_ids'] = $data['genre_ids'] ?? [];
-                    $data['overview'] = $data['overview'] ?? '';
+                    $data = is_string($media->data) ? json_decode($media->data, true) : ($media->data ?? []);
+                    if (!isset($data['id'])) {
+                        $data['id'] = $media->tmdb_id;
+                    }
+                    if (!isset($data['media_type'])) {
+                        $data['media_type'] = $media->media_type;
+                    }
+                    if (!isset($data['title']) && !isset($data['name'])) {
+                        $data['title'] = $media->title;
+                    }
+                    if (!isset($data['poster_path']) && $media->poster_path) {
+                        $data['poster_path'] = $media->poster_path;
+                    }
                     return $data;
                 })
-                ->toArray();
+                ->filter()
+                ->values()
+                ->all();
         } catch (\Throwable $e) {
-            Log::warning("Local media fallback query failed: " . $e->getMessage());
+            Log::warning("Local media fallback failed: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Fetch from TMDB and cache only on successful response, with full resilience to cache backend failures.
+     * Cache TMDB API responses with local database background persistence.
      */
     private function rememberTmdb(string $cacheKey, string $endpoint, array $query = [], string $resultsKey = 'results', int $ttlHours = 4): array
     {
         try {
-            if (Cache::has($cacheKey)) {
-                $cached = Cache::get($cacheKey);
-                if (is_array($cached)) {
-                    return $cached;
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Cache read failed for key {$cacheKey}: " . $e->getMessage());
-        }
+            $data = Cache::remember($cacheKey, now()->addHours($ttlHours), function () use ($endpoint, $query, $resultsKey) {
+                return $this->fetchTmdb($endpoint, $query, $resultsKey) ?? [];
+            });
 
-        $data = $this->fetchTmdb($endpoint, $query, $resultsKey);
-
-        if ($data !== null) {
-            try {
-                Cache::put($cacheKey, $data, now()->addHours($ttlHours));
-            } catch (\Throwable $e) {
-                Log::warning("Cache write failed for key {$cacheKey}: " . $e->getMessage());
-            }
-
-            if ($resultsKey === 'results') {
+            if (!empty($data) && is_array($data)) {
                 $inferredType = str_contains($endpoint, '/tv') ? 'tv' : 'movie';
                 $this->syncLocalMedia($data, $inferredType);
+                return $data;
             }
-            return $data;
+        } catch (\Throwable $e) {
+            Log::warning("Cache access failed for {$cacheKey}: " . $e->getMessage());
         }
 
         return [];
     }
 
+    /**
+     * Get Movie Genres from cache or fallback to static class constants.
+     */
     private function getMovieGenres(): Collection
     {
         try {
-            if (Cache::has('tmdb:genres:movie')) {
-                $cached = Cache::get('tmdb:genres:movie');
-                if (!empty($cached)) {
-                    $normalized = $this->normalizeGenres($cached);
-                    if (!empty($normalized)) {
-                        return collect($normalized);
-                    }
-                }
+            $cached = Cache::get('tmdb:genres:movie');
+            if (!empty($cached)) {
+                return collect($this->normalizeGenres($cached));
             }
         } catch (\Throwable $e) {
             Log::warning("Cache read failed in getMovieGenres: " . $e->getMessage());
@@ -294,17 +342,15 @@ class AdminController extends Controller
         return collect(self::MOVIE_GENRES);
     }
 
+    /**
+     * Get TV Genres from cache or fallback to static class constants.
+     */
     private function getTvGenres(): Collection
     {
         try {
-            if (Cache::has('tmdb:genres:tv')) {
-                $cached = Cache::get('tmdb:genres:tv');
-                if (!empty($cached)) {
-                    $normalized = $this->normalizeGenres($cached);
-                    if (!empty($normalized)) {
-                        return collect($normalized);
-                    }
-                }
+            $cached = Cache::get('tmdb:genres:tv');
+            if (!empty($cached)) {
+                return collect($this->normalizeGenres($cached));
             }
         } catch (\Throwable $e) {
             Log::warning("Cache read failed in getTvGenres: " . $e->getMessage());
@@ -314,27 +360,17 @@ class AdminController extends Controller
     }
 
     /**
-     * Retrieve combined distinct genres for Anime catalog, vanishing genre 16 and any "Animation" genre.
+     * Get combined Anime Genres from static constants (excluding Animation ID 16).
      */
     private function getAnimeGenres(): Collection
     {
-        $movieGenres = $this->getMovieGenres();
-        $tvGenres = $this->getTvGenres();
-
-        $combined = [];
-        foreach ($movieGenres as $id => $name) {
-            $combined[(int) $id] = (string) $name;
-        }
-        foreach ($tvGenres as $id => $name) {
-            $combined[(int) $id] = (string) $name;
-        }
-
+        $combined = self::MOVIE_GENRES + self::TV_GENRES;
         $filtered = [];
+
         foreach ($combined as $id => $name) {
-            if ((int) $id === 16 || strcasecmp(trim((string) $name), 'Animation') === 0) {
-                continue;
+            if ((int) $id !== 16 && strcasecmp(trim($name), 'Animation') !== 0) {
+                $filtered[$id] = $name;
             }
-            $filtered[(int) $id] = (string) $name;
         }
 
         asort($filtered);
@@ -354,6 +390,17 @@ class AdminController extends Controller
 
         try {
             if (Schema::hasTable('media')) {
+                // Auto-discover from TMDB if searching by keyword and local table has 0 matches
+                if ($search !== '') {
+                    $localCount = Media::where('media_type', $mediaType)
+                        ->where('title', 'like', "%{$search}%")
+                        ->count();
+
+                    if ($localCount === 0) {
+                        $this->autoDiscoverFromTmdb($search, $mediaType);
+                    }
+                }
+
                 $query = Media::where('media_type', $mediaType);
 
                 // Filter by title keyword
@@ -422,6 +469,11 @@ class AdminController extends Controller
                         return (clone $query)->count();
                     });
 
+                // Do not lock in empty search results for 15 minutes
+                if ($total === 0 && $search !== '') {
+                    Cache::forget($countCacheKey);
+                }
+
                 // Cache paginated items to eliminate database load and deliver instant response times
                 $itemsCacheKey = "media:items:{$mediaType}:" . md5($search . '|' . ($genreId ?? '') . '|' . $sort . '|' . $page);
                 $items = app()->runningUnitTests()
@@ -429,6 +481,10 @@ class AdminController extends Controller
                     : Cache::remember($itemsCacheKey, now()->addMinutes(15), function () use ($query, $selectCols, $page, $perPage) {
                         return (clone $query)->select($selectCols)->forPage($page, $perPage)->get();
                     });
+
+                if ($items->isEmpty() && $search !== '') {
+                    Cache::forget($itemsCacheKey);
+                }
 
                 return new LengthAwarePaginator(
                     $items,
@@ -454,7 +510,7 @@ class AdminController extends Controller
     /**
      * Query anime catalog with baseline Animation genre enforcement (ID 16),
      * format filtering (all/movie/tv), and high-performance indexed queries.
-     * Operates purely against local MySQL catalog without any synchronous external network calls.
+     * Operates purely against local catalog without any blocking external network calls.
      */
     private function queryAnimeCatalog(Request $request): LengthAwarePaginator
     {
@@ -465,8 +521,23 @@ class AdminController extends Controller
 
         try {
             if (Schema::hasTable('media')) {
+                // Auto-discover from TMDB if searching by keyword and local anime catalog has 0 matches
+                if ($search !== '') {
+                    $localAnimeCount = Media::whereIn('media_type', ['movie', 'tv'])
+                        ->where('title', 'like', "%{$search}%")
+                        ->where(function ($q) {
+                            $q->where('genre_ids', 'like', '%,16,%')
+                              ->orWhere('data', 'like', '%"id":16%');
+                        })
+                        ->count();
+
+                    if ($localAnimeCount === 0) {
+                        $this->autoDiscoverFromTmdb($search, 'anime');
+                    }
+                }
+
                 $driver = DB::connection()->getDriverName();
-                $query = $driver === 'mysql'
+                $query = ($this->hasPerformanceColumns() && $driver === 'mysql')
                     ? Media::from(DB::raw('media IGNORE INDEX (PRIMARY)'))
                     : Media::query();
 
@@ -481,7 +552,19 @@ class AdminController extends Controller
 
                 // Automatic Baseline Constraint: Must always include genre 16 (Animation)
                 if ($this->hasPerformanceColumns()) {
-                    $query->where('genre_ids', 'like', '%,16,%');
+                    $query->where(function ($q) {
+                        $q->where('genre_ids', 'like', '%,16,%')
+                          ->orWhere(function ($sub) {
+                              $sub->whereNull('genre_ids')
+                                  ->where(function ($d) {
+                                      $d->where('data', 'like', '%"id":16%')
+                                        ->orWhere('data', 'like', '%"genre_ids":%[16,%')
+                                        ->orWhere('data', 'like', '%"genre_ids":%,16,%')
+                                        ->orWhere('data', 'like', '%"genre_ids":%,16]%')
+                                        ->orWhere('data', 'like', '%"genre_ids":%[16]%');
+                                  });
+                          });
+                    });
                 } else {
                     $driver = DB::connection()->getDriverName();
                     if ($driver === 'mysql') {
@@ -571,6 +654,11 @@ class AdminController extends Controller
                         return (clone $query)->count();
                     });
 
+                // Do not lock in empty search results for 15 minutes
+                if ($total === 0 && $search !== '') {
+                    Cache::forget($countCacheKey);
+                }
+
                 // Cache paginated anime items to deliver sub-millisecond response times
                 $itemsCacheKey = 'media:items:anime:' . md5($search . '|' . $format . '|' . ($genreId ?? '') . '|' . $sort . '|' . $page);
                 $items = app()->runningUnitTests()
@@ -578,6 +666,10 @@ class AdminController extends Controller
                     : Cache::remember($itemsCacheKey, now()->addMinutes(15), function () use ($query, $selectCols, $page, $perPage) {
                         return (clone $query)->select($selectCols)->forPage($page, $perPage)->get();
                     });
+
+                if ($items->isEmpty() && $search !== '') {
+                    Cache::forget($itemsCacheKey);
+                }
 
                 return new LengthAwarePaginator(
                     $items,
