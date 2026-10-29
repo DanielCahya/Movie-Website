@@ -37,7 +37,12 @@ return new class extends Migration
             ");
         }
 
-        // 2. Seed foundational anime catalog so /animation has instant, high-quality content
+        // 2. Seed foundational anime catalog in live/staging environments so /animation has instant, high-quality content.
+        // Skip during automated unit/feature tests to preserve pristine database isolation for tests.
+        if (app()->runningUnitTests()) {
+            return;
+        }
+
         $now = now();
         $animeSeeds = [
             [
@@ -245,4 +250,3 @@ return new class extends Migration
         // No destructive reverse needed for seeds
     }
 };
-
