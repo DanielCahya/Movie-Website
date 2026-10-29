@@ -7,6 +7,7 @@ use App\Models\Media;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class WarmMediaCatalog extends Command
 {
@@ -17,7 +18,7 @@ class WarmMediaCatalog extends Command
      */
     protected $signature = 'media:warm 
                             {--pages=2 : Number of pages to fetch per category (20 titles per page)}
-                            {--type=all : Media type to warm (all, movie, tv)}
+                            {--type=all : Media type to warm (all, movie, tv, anime)}
                             {--deep : Fetch full trailers, cast, and credits for top titles}';
 
     /**
@@ -25,7 +26,7 @@ class WarmMediaCatalog extends Command
      *
      * @var string
      */
-    protected $description = 'Pre-populate local database with popular and top-rated media from TMDB to eliminate real-time user latency';
+    protected $description = 'Pre-populate local database with popular, top-rated, and anime media from TMDB to eliminate real-time user latency';
 
     /**
      * Execute the console command.
@@ -49,11 +50,13 @@ class WarmMediaCatalog extends Command
                 'type' => 'movie',
                 'name' => 'Popular Movies',
                 'endpoint' => 'https://api.themoviedb.org/3/movie/popular',
+                'query' => [],
             ];
             $categories[] = [
                 'type' => 'movie',
                 'name' => 'Top Rated Movies',
                 'endpoint' => 'https://api.themoviedb.org/3/movie/top_rated',
+                'query' => [],
             ];
         }
 
@@ -62,17 +65,43 @@ class WarmMediaCatalog extends Command
                 'type' => 'tv',
                 'name' => 'Popular TV Shows',
                 'endpoint' => 'https://api.themoviedb.org/3/tv/popular',
+                'query' => [],
             ];
             $categories[] = [
                 'type' => 'tv',
                 'name' => 'Top Rated TV Shows',
                 'endpoint' => 'https://api.themoviedb.org/3/tv/top_rated',
+                'query' => [],
+            ];
+        }
+
+        if (in_array($typeOption, ['all', 'anime'], true)) {
+            $categories[] = [
+                'type' => 'tv',
+                'name' => 'Top Anime Series',
+                'endpoint' => 'https://api.themoviedb.org/3/discover/tv',
+                'query' => [
+                    'with_genres' => 16,
+                    'sort_by' => 'vote_count.desc',
+                ],
+            ];
+            $categories[] = [
+                'type' => 'movie',
+                'name' => 'Top Anime Movies',
+                'endpoint' => 'https://api.themoviedb.org/3/discover/movie',
+                'query' => [
+                    'with_genres' => 16,
+                    'sort_by' => 'vote_count.desc',
+                ],
             ];
         }
 
         $totalInserted = 0;
         $totalProcessed = 0;
         $showController = $isDeep ? app(ShowController::class) : null;
+        $hasPerformanceColumns = Schema::hasTable('media')
+            && Schema::hasColumn('media', 'vote_average')
+            && Schema::hasColumn('media', 'genre_ids');
 
         $this->info("Starting catalog warmup: {$pages} page(s) per category [type: {$typeOption}]");
 
@@ -81,10 +110,12 @@ class WarmMediaCatalog extends Command
 
             for ($page = 1; $page <= $pages; $page++) {
                 try {
+                    $requestQuery = array_merge($cat['query'] ?? [], ['page' => $page]);
+
                     $response = Http::withToken($token)
                         ->timeout(8)
                         ->retry(2, 200)
-                        ->get($cat['endpoint'], ['page' => $page]);
+                        ->get($cat['endpoint'], $requestQuery);
 
                     if (!$response->successful()) {
                         $this->warn("  Failed to fetch page {$page} (HTTP {$response->status()})");
@@ -107,8 +138,22 @@ class WarmMediaCatalog extends Command
 
                         $totalProcessed++;
                         $mediaType = $cat['type'];
+                        $rawGenreIds = $item['genre_ids'] ?? [];
 
-                        $insertData[] = [
+                        // Ensure anime categories always include genre 16
+                        if (!empty($cat['query']['with_genres']) && !in_array(16, $rawGenreIds, true)) {
+                            $rawGenreIds[] = 16;
+                            $item['genre_ids'] = $rawGenreIds;
+                        }
+
+                        $formattedGenreIds = !empty($rawGenreIds) && is_array($rawGenreIds)
+                            ? ',' . implode(',', array_map('intval', $rawGenreIds)) . ','
+                            : null;
+                        $voteAvg = isset($item['vote_average']) && is_numeric($item['vote_average'])
+                            ? round((float) $item['vote_average'], 1)
+                            : null;
+
+                        $row = [
                             'tmdb_id' => $item['id'],
                             'media_type' => $mediaType,
                             'title' => $item['title'] ?? $item['name'] ?? 'Unknown',
@@ -117,6 +162,13 @@ class WarmMediaCatalog extends Command
                             'created_at' => $now,
                             'updated_at' => $now,
                         ];
+
+                        if ($hasPerformanceColumns) {
+                            $row['vote_average'] = $voteAvg;
+                            $row['genre_ids'] = $formattedGenreIds;
+                        }
+
+                        $insertData[] = $row;
 
                         // If deep warming is requested, fetch full rich details for page 1 items
                         if ($isDeep && $page === 1 && $showController) {
@@ -133,7 +185,7 @@ class WarmMediaCatalog extends Command
                         $this->line("  Page {$page}: processed " . count($insertData) . " titles ({$inserted} newly inserted)");
                     }
 
-                    // Gentle delay between page requests outside unit tests
+                    // Delay between page requests outside unit tests
                     if (!app()->runningUnitTests()) {
                         usleep(100000); // 100ms
                     }
@@ -149,13 +201,11 @@ class WarmMediaCatalog extends Command
         $this->table(
             ['Metric', 'Count'],
             [
-                ['Total Processed', $totalProcessed],
+                ['Total Titles Processed', $totalProcessed],
                 ['New Titles Inserted', $totalInserted],
-                ['Total Titles in DB', Media::count()],
             ]
         );
 
         return self::SUCCESS;
     }
 }
-

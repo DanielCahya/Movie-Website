@@ -329,6 +329,8 @@ class LocalCatalogBrowseTest extends TestCase
         $response->assertSee('Spirited Away');
         $response->assertSee('Attack on Titan');
         $response->assertDontSee('Die Hard Non-Anime');
+
+        Http::assertNothingSent();
     }
 
     public function test_animation_filters_by_format_selector()
@@ -399,5 +401,23 @@ class LocalCatalogBrowseTest extends TestCase
 
         // Option with value "16" must be vanished from the genre dropdown
         $response->assertDontSee('<option value="16"', false);
+    }
+
+    public function test_animation_route_redirects_capitalized_url()
+    {
+        $response = $this->get('/Animation');
+        $response->assertStatus(301);
+        $response->assertRedirect('/animation');
+    }
+
+    public function test_animation_makes_zero_external_tmdb_requests()
+    {
+        Http::fake();
+
+        $response = $this->get('/animation');
+        $response->assertStatus(200);
+
+        // Enforces that navigating to /animation sends ZERO external HTTP requests
+        Http::assertNothingSent();
     }
 }

@@ -51,6 +51,11 @@ Route::get('/tvshow', [AdminController::class, 'tvshow']);
 Route::get('/animation', [AdminController::class, 'animation']);
 Route::get('/movieList', [AdminController::class, 'movieList']);
 
+// Clean URL Case Redirections
+Route::redirect('/Animation', '/animation', 301);
+Route::redirect('/MovieList', '/movieList', 301);
+Route::redirect('/Tvshow', '/tvshow', 301);
+
 // Forum Public Routes
 Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
 Route::get('/forum/category/{slug}', [ForumController::class, 'category'])->name('forum.category');
