@@ -126,6 +126,11 @@ class MediaDetailsTest extends TestCase
                 'title' => 'Stub Movie',
                 'overview' => 'Upgraded full description',
                 'poster_path' => '/full_poster.jpg',
+                'genres' => [
+                    ['id' => 16, 'name' => 'Animation'],
+                    ['id' => 28, 'name' => 'Action'],
+                ],
+                'vote_average' => 8.3,
                 'videos' => [
                     'results' => [
                         ['key' => 'upgraded_key', 'site' => 'YouTube', 'type' => 'Trailer']
@@ -141,9 +146,11 @@ class MediaDetailsTest extends TestCase
         $this->assertEquals('Upgraded full description', $result['overview']);
         $this->assertEquals('upgraded_key', $result['videos']['results'][0]['key']);
 
-        // 3. Verify database record was updated in-place with full details
+        // 3. Verify database record was updated in-place with full details and performance columns
         $updatedMedia = Media::where('tmdb_id', 202)->where('media_type', 'movie')->first();
         $this->assertEquals('/full_poster.jpg', $updatedMedia->poster_path);
+        $this->assertEquals(8.3, (float) $updatedMedia->vote_average);
+        $this->assertEquals(',16,28,', $updatedMedia->genre_ids);
         $this->assertArrayHasKey('videos', $updatedMedia->data);
     }
 
@@ -188,5 +195,53 @@ class MediaDetailsTest extends TestCase
         $persistedMedia = Media::where('tmdb_id', 303)->where('media_type', 'movie')->first();
         $this->assertArrayHasKey('videos', $persistedMedia->data);
         $this->assertEquals('full_key', $persistedMedia->data['videos']['results'][0]['key']);
+    }
+
+    public function test_opened_anime_persists_performance_columns_and_appears_in_animation_catalog()
+    {
+        config(['services.tmdb.token' => 'fake-token']);
+
+        Http::fake([
+            'https://api.themoviedb.org/3/tv/8888*' => Http::response([
+                'id' => 8888,
+                'name' => 'Dandadan Test Series',
+                'overview' => 'High schoolers investigate occult phenomenons.',
+                'poster_path' => '/dandadan.jpg',
+                'vote_average' => 8.7,
+                'genres' => [
+                    ['id' => 16, 'name' => 'Animation'],
+                    ['id' => 10759, 'name' => 'Action & Adventure'],
+                    ['id' => 35, 'name' => 'Comedy'],
+                ],
+                'videos' => ['results' => [['key' => 'dandadan_trailer', 'site' => 'YouTube', 'type' => 'Trailer']]],
+                'credits' => ['cast' => []],
+            ], 200),
+        ]);
+
+        // 1. Visit watch endpoint
+        $controller = new ShowController();
+        $controller->fetchMedia('tv', 8888);
+
+        // 2. Verify media record in database has genre_ids including 16 and vote_average
+        $media = Media::where('tmdb_id', 8888)->where('media_type', 'tv')->first();
+        $this->assertNotNull($media);
+        $this->assertEquals('Dandadan Test Series', $media->title);
+        $this->assertEquals(8.7, (float) $media->vote_average);
+        $this->assertStringContainsString(',16,', $media->genre_ids);
+
+        // 3. Verify it shows up in /animation catalog
+        $res = $this->get('/animation');
+        $res->assertStatus(200);
+        $res->assertSee('Dandadan Test Series');
+
+        // 4. Verify search in /animation filter bar finds it
+        $searchRes = $this->get('/animation?q=Dandadan');
+        $searchRes->assertStatus(200);
+        $searchRes->assertSee('Dandadan Test Series');
+
+        // 5. Verify format filter finds it
+        $formatRes = $this->get('/animation?format=tv');
+        $formatRes->assertStatus(200);
+        $formatRes->assertSee('Dandadan Test Series');
     }
 }
