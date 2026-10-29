@@ -64,6 +64,12 @@ class MediaWarmCommandTest extends TestCase
                     ]
                 ]
             ], 200),
+            'https://api.themoviedb.org/3/discover/tv*' => Http::response([
+                'results' => []
+            ], 200),
+            'https://api.themoviedb.org/3/discover/movie*' => Http::response([
+                'results' => []
+            ], 200),
         ]);
 
         $this->artisan('media:warm', ['--pages' => 1])
@@ -134,5 +140,28 @@ class MediaWarmCommandTest extends TestCase
         $this->assertArrayHasKey('videos', $record->data);
         $this->assertEquals('existing_trailer_key', $record->data['videos']['results'][0]['key']);
     }
-}
 
+    public function test_command_warms_anime_catalog_specifically()
+    {
+        config(['services.tmdb.token' => 'mock-token']);
+
+        Http::fake([
+            'https://api.themoviedb.org/3/discover/tv*' => Http::response([
+                'results' => [
+                    ['id' => 901, 'name' => 'Demon Slayer', 'genre_ids' => [16, 10759], 'vote_average' => 8.7]
+                ]
+            ], 200),
+            'https://api.themoviedb.org/3/discover/movie*' => Http::response([
+                'results' => [
+                    ['id' => 902, 'title' => 'Spirited Away', 'genre_ids' => [16, 14], 'vote_average' => 8.5]
+                ]
+            ], 200),
+        ]);
+
+        $this->artisan('media:warm', ['--type' => 'anime', '--pages' => 1])
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('media', ['tmdb_id' => 901, 'media_type' => 'tv', 'title' => 'Demon Slayer']);
+        $this->assertDatabaseHas('media', ['tmdb_id' => 902, 'media_type' => 'movie', 'title' => 'Spirited Away']);
+    }
+}

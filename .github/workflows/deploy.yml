@@ -46,7 +46,7 @@ jobs:
           sudo find /var/www/html/movie-website/storage /var/www/html/movie-website/bootstrap/cache -type d -exec chmod 775 {} +
           sudo find /var/www/html/movie-website/storage /var/www/html/movie-website/bootstrap/cache -type f -exec chmod 664 {} +
           
-          # Reload PHP-FPM to flush persistent workers and reset memory state
-          sudo systemctl reload php8.2-fpm || sudo systemctl reload php8.4-fpm || sudo systemctl reload php-fpm
+          # Restart PHP-FPM to flush persistent workers and reset memory state
+          sudo systemctl restart php8.3-fpm
           
           echo "Deployment Successful!"

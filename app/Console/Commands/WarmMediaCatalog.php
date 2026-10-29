@@ -39,7 +39,7 @@ class WarmMediaCatalog extends Command
             return self::FAILURE;
         }
 
-        $pages = max(1, min((int) $this->option('pages'), 10));
+        $pages = max(1, min((int) $this->option('pages'), 50));
         $typeOption = strtolower((string) $this->option('type'));
         $isDeep = (bool) $this->option('deep');
 
@@ -86,12 +86,40 @@ class WarmMediaCatalog extends Command
                 ],
             ];
             $categories[] = [
+                'type' => 'tv',
+                'name' => 'Popular Anime Series',
+                'endpoint' => 'https://api.themoviedb.org/3/discover/tv',
+                'query' => [
+                    'with_genres' => 16,
+                    'sort_by' => 'popularity.desc',
+                ],
+            ];
+            $categories[] = [
+                'type' => 'tv',
+                'name' => 'Japanese Anime Series',
+                'endpoint' => 'https://api.themoviedb.org/3/discover/tv',
+                'query' => [
+                    'with_genres' => 16,
+                    'with_original_language' => 'ja',
+                    'sort_by' => 'popularity.desc',
+                ],
+            ];
+            $categories[] = [
                 'type' => 'movie',
                 'name' => 'Top Anime Movies',
                 'endpoint' => 'https://api.themoviedb.org/3/discover/movie',
                 'query' => [
                     'with_genres' => 16,
                     'sort_by' => 'vote_count.desc',
+                ],
+            ];
+            $categories[] = [
+                'type' => 'movie',
+                'name' => 'Popular Animated Movies',
+                'endpoint' => 'https://api.themoviedb.org/3/discover/movie',
+                'query' => [
+                    'with_genres' => 16,
+                    'sort_by' => 'popularity.desc',
                 ],
             ];
         }
