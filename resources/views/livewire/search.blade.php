@@ -1,14 +1,14 @@
 <div class="relative z-50">
     <div class="relative flex items-center">
         <i class='bx bx-search absolute left-3 text-gray-400 text-lg'></i>
-        <input wire:model.debounce.300ms="search" type="text" class="bg-gray-800/50 border border-gray-700 rounded-full w-48 focus:w-64 md:w-64 transition-all duration-300 px-4 pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-white placeholder-gray-400" placeholder="Search...">
+        <input wire:model.debounce.350ms="search" type="text" autocomplete="off" spellcheck="false" class="bg-gray-800/50 border border-gray-700 rounded-full w-48 focus:w-64 md:w-64 transition-all duration-300 px-4 pl-10 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-white placeholder-gray-400" placeholder="Search...">
         <!-- Loading Spinner -->
         <div wire:loading wire:target="search" class="absolute right-3">
             <i class='bx bx-loader-alt animate-spin text-brand text-lg'></i>
         </div>
     </div>
     
-    @if (strlen($search) >= 2)
+    @if (mb_strlen(trim($search)) >= 2)
         <div class="absolute mt-2 bg-brand-card border border-gray-700/50 shadow-2xl shadow-brand-bg rounded-xl w-80 max-h-96 overflow-y-auto right-0 md:left-0 md:right-auto z-50">
             @if ($hasilcari->count() > 0)
                 <ul class="py-2">
