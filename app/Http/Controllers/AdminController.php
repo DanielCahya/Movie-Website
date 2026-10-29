@@ -70,7 +70,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Safely fetch data from TMDB API with timeout and retry.
+     * Safely fetch data from TMDB API with short connect timeout and zero retries to prevent blocking user threads.
      * Returns null on failure so failed responses are not cached long-term.
      */
     private function fetchTmdb(string $endpoint, array $query = [], string $key = 'results'): ?array
@@ -82,8 +82,8 @@ class AdminController extends Controller
             }
 
             $response = Http::withToken($token)
-                ->timeout(5)
-                ->retry(2, 200)
+                ->connectTimeout(2)
+                ->timeout(3)
                 ->get($endpoint, $query);
 
             if ($response->successful()) {
@@ -226,6 +226,11 @@ class AdminController extends Controller
                     $data['title'] = $media->title;
                     $data['name'] = $media->title;
                     $data['poster_path'] = $media->poster_path;
+                    $data['backdrop_path'] = $data['backdrop_path'] ?? $media->poster_path ?? '';
+                    $data['vote_average'] = $data['vote_average'] ?? $media->vote_average ?? 0;
+                    $data['release_date'] = $data['release_date'] ?? $data['first_air_date'] ?? '';
+                    $data['genre_ids'] = $data['genre_ids'] ?? [];
+                    $data['overview'] = $data['overview'] ?? '';
                     return $data;
                 })
                 ->toArray();
@@ -286,22 +291,6 @@ class AdminController extends Controller
             Log::warning("Cache read failed in getMovieGenres: " . $e->getMessage());
         }
 
-        if (app()->runningUnitTests() || empty(config('services.tmdb.token'))) {
-            return collect(self::MOVIE_GENRES);
-        }
-
-        $genres = $this->fetchTmdb('https://api.themoviedb.org/3/genre/movie/list', [], 'genres');
-        if (!empty($genres)) {
-            $normalized = $this->normalizeGenres($genres);
-            try {
-                Cache::put('tmdb:genres:movie', $normalized, now()->addDays(7));
-            } catch (\Throwable $e) {
-                Log::warning("Cache write failed in getMovieGenres: " . $e->getMessage());
-            }
-
-            return collect($normalized);
-        }
-
         return collect(self::MOVIE_GENRES);
     }
 
@@ -321,22 +310,6 @@ class AdminController extends Controller
             Log::warning("Cache read failed in getTvGenres: " . $e->getMessage());
         }
 
-        if (app()->runningUnitTests() || empty(config('services.tmdb.token'))) {
-            return collect(self::TV_GENRES);
-        }
-
-        $genres = $this->fetchTmdb('https://api.themoviedb.org/3/genre/tv/list', [], 'genres');
-        if (!empty($genres)) {
-            $normalized = $this->normalizeGenres($genres);
-            try {
-                Cache::put('tmdb:genres:tv', $normalized, now()->addDays(7));
-            } catch (\Throwable $e) {
-                Log::warning("Cache write failed in getTvGenres: " . $e->getMessage());
-            }
-
-            return collect($normalized);
-        }
-
         return collect(self::TV_GENRES);
     }
 
@@ -350,10 +323,10 @@ class AdminController extends Controller
 
         $combined = [];
         foreach ($movieGenres as $id => $name) {
-            $combined[(int) $id] = $name;
+            $combined[(int) $id] = (string) $name;
         }
         foreach ($tvGenres as $id => $name) {
-            $combined[(int) $id] = $name;
+            $combined[(int) $id] = (string) $name;
         }
 
         $filtered = [];
@@ -371,6 +344,7 @@ class AdminController extends Controller
 
     /**
      * Query media catalog with high-performance indexes, cached counts, and robust pagination.
+     * Serves directly from local database with zero blocking network calls to TMDB.
      */
     private function queryCatalog(Request $request, string $mediaType): LengthAwarePaginator
     {
@@ -380,18 +354,6 @@ class AdminController extends Controller
 
         try {
             if (Schema::hasTable('media')) {
-                // Cold-start fallback only if local catalog for this media type has zero records.
-                // Uses exists() which leverages the composite index rather than scanning count().
-                if (!Media::where('media_type', $mediaType)->exists()) {
-                    if ($mediaType === 'tv') {
-                        $this->rememberTmdb('tmdb:tv_top_rated', 'https://api.themoviedb.org/3/tv/top_rated');
-                        $this->rememberTmdb('tmdb:new_tv', 'https://api.themoviedb.org/3/tv/popular');
-                    } else {
-                        $this->rememberTmdb('tmdb:top_rated', 'https://api.themoviedb.org/3/movie/top_rated');
-                        $this->rememberTmdb('tmdb:popular_movies', 'https://api.themoviedb.org/3/movie/popular');
-                    }
-                }
-
                 $query = Media::where('media_type', $mediaType);
 
                 // Filter by title keyword
@@ -485,6 +447,7 @@ class AdminController extends Controller
     /**
      * Query anime catalog with baseline Animation genre enforcement (ID 16),
      * format filtering (all/movie/tv), and high-performance indexed queries.
+     * Operates purely against local MySQL catalog without any synchronous external network calls.
      */
     private function queryAnimeCatalog(Request $request): LengthAwarePaginator
     {
@@ -495,23 +458,6 @@ class AdminController extends Controller
 
         try {
             if (Schema::hasTable('media')) {
-                // Cold-start fallback only if local anime catalog has zero records
-                if ($this->hasPerformanceColumns()) {
-                    $hasAnime = Media::where('genre_ids', 'like', '%,16,%')->exists();
-                } else {
-                    $hasAnime = Media::where('data', 'like', '%"id":16%')->exists();
-                }
-
-                if (!$hasAnime) {
-                    $this->rememberTmdb('tmdb:tv_top_anime', 'https://api.themoviedb.org/3/discover/tv', [
-                        'sort_by' => 'vote_count.desc',
-                        'with_genres' => 16,
-                    ]);
-                    $this->rememberTmdb('tmdb:anime', 'https://api.themoviedb.org/3/discover/movie', [
-                        'with_genres' => 16,
-                    ]);
-                }
-
                 $query = Media::query();
 
                 // Format filter: all, tv, movie

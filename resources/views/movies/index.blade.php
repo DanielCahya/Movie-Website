@@ -17,7 +17,7 @@
              style="display: {{ $index === 0 ? 'block' : 'none' }};"
         >
             <!-- Background Image -->
-            <img src="{{'https://image.tmdb.org/t/p/original/'.$hero['backdrop_path']}}" alt="{{ $hero['title'] }}" class="absolute inset-0 w-full h-full object-cover object-top opacity-60">
+            <img src="{{ 'https://image.tmdb.org/t/p/original/' . ltrim($hero['backdrop_path'] ?? $hero['poster_path'] ?? '', '/') }}" alt="{{ $hero['title'] ?? 'Title' }}" class="absolute inset-0 w-full h-full object-cover object-top opacity-60">
             <!-- Gradients for blending -->
             <div class="absolute inset-0 bg-gradient-to-r from-brand-bg via-brand-bg/80 to-transparent z-0"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-brand-bg via-transparent to-transparent z-0"></div>
@@ -27,30 +27,30 @@
                 <div class="w-full px-4 sm:px-8 lg:px-12 xl:px-16 pt-20">
                     <div class="max-w-3xl">
                         <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-wider mb-2 drop-shadow-lg">
-                            {{ $hero['title'] }}
+                            {{ $hero['title'] ?? 'Untitled' }}
                         </h1>
                         
                         <div class="flex items-center space-x-4 mb-6 text-sm md:text-base font-medium">
                             <div class="flex items-center space-x-1 text-yellow-500">
                                 <i class='bx bxs-star'></i>
-                                <span class="text-white">{{ $hero['vote_average'] }}</span>
+                                <span class="text-white">{{ $hero['vote_average'] ?? '0' }}</span>
                             </div>
                             <span class="text-gray-500">|</span>
-                            <span class="text-gray-300">{{\Carbon\Carbon::parse($hero['release_date'])->format('Y')}}</span>
+                            <span class="text-gray-300">{{ isset($hero['release_date']) && !empty($hero['release_date']) ? \Carbon\Carbon::parse($hero['release_date'])->format('Y') : '' }}</span>
                             <span class="text-gray-500">|</span>
                             <div class="text-gray-300 space-x-2">
-                                @foreach (array_slice($hero['genre_ids'], 0, 3) as $genre)
+                                @foreach (array_slice($hero['genre_ids'] ?? [], 0, 3) as $genre)
                                     <span>{{$genres->get($genre) ?? ''}}@if (!$loop->last) <span class="text-gray-600 px-1">|</span> @endif</span>
                                 @endforeach
                             </div>
                         </div>
                         
                         <p class="text-gray-400 text-sm md:text-base leading-relaxed mb-8 line-clamp-3 md:line-clamp-4 max-w-xl">
-                            {{ $hero['overview'] }}
+                            {{ $hero['overview'] ?? '' }}
                         </p>
                         
                         <div class="flex items-center space-x-4">
-                            <a wire:navigate.hover href="{{ route('watch', ['type' => 'movie', 'id' => $hero['id']]) }}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
+                            <a wire:navigate.hover href="{{ route('watch', ['type' => 'movie', 'id' => $hero['id'] ?? 0]) }}" class="flex items-center justify-center bg-brand-dark hover:bg-teal-600 text-white font-semibold py-3 px-8 rounded transition-colors shadow-lg shadow-brand-dark/30">
                                 <i class='bx bx-info-circle text-2xl mr-2'></i>
                                 Details
                             </a>
